@@ -10,9 +10,12 @@ export default function DashboardTopbar({ user }: { user: User }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (saved === 'dark') {
       document.documentElement.classList.add('dark');
       setDarkMode(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      setDarkMode(false);
     }
   }, []);
 
