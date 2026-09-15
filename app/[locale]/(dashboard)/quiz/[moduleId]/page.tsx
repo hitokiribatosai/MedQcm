@@ -3,13 +3,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getModuleData, QuestionData } from '@/lib/data/curriculum';
+import { getModuleData, QuestionData, OptionData } from '@/lib/data/curriculum';
 import { useQuizStore, QuizMode } from '@/stores/quizStore';
 import { playSuccessSound, playErrorSound } from '@/lib/audio';
 import {
   X, Heart, Clock, CheckCircle2, XCircle, Sparkles,
   ArrowRight, ShieldAlert, Flag, Volume2, VolumeX,
-  AlertTriangle, Send, Check
+  Send, Check, Play, Settings2, BarChart2
 } from 'lucide-react';
 
 const FALLBACK_QUESTIONS: QuestionData[] = [
@@ -55,6 +55,18 @@ const FALLBACK_QUESTIONS: QuestionData[] = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+function shuffleArray<T>(array: T[]): T[] {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+}
+
 export default function DuolingoQuizSessionPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -64,12 +76,20 @@ export default function DuolingoQuizSessionPage() {
   const modeParam = (searchParams.get('mode') as QuizMode) || 'exploration';
 
   const moduleInfo = useMemo(() => getModuleData(moduleId), [moduleId]);
-  const questions: QuestionData[] = useMemo(() => {
+  const rawQuestions: QuestionData[] = useMemo(() => {
     if (moduleInfo?.module.questions && moduleInfo.module.questions.length > 0) {
       return moduleInfo.module.questions;
     }
     return FALLBACK_QUESTIONS;
   }, [moduleInfo]);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // STATE
+  // ───────────────────────────────────────────────────────────────────────────
+  const [quizState, setQuizState] = useState<'setup' | 'playing'>('setup');
+  const [selectedCount, setSelectedCount] = useState<number | 'all'>(20);
+  const [activeQuestions, setActiveQuestions] = useState<QuestionData[]>([]);
+  const [pastMistakesCount, setPastMistakesCount] = useState(0);
 
   const {
     currentIndex,
@@ -83,52 +103,91 @@ export default function DuolingoQuizSessionPage() {
     completeQuiz,
   } = useQuizStore();
 
-  // Multi-selection state: array of selected option IDs
   const [selectedOptIds, setSelectedOptIds] = useState<string[]>([]);
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [tabSwitches, setTabSwitches] = useState(0);
   const [hearts, setHearts] = useState(5);
 
-  // Report Mistake Modal State
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('correction_error');
   const [reportComment, setReportComment] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
 
-  // Initialize quiz store
+  // Load mistakes count on mount for the setup screen
   useEffect(() => {
-    const duration = modeParam === 'exam' ? questions.length * 90 : 0;
+    try {
+      const stored = localStorage.getItem(`medqcm_mistakes_${moduleId}`);
+      if (stored) {
+        const mistakes = JSON.parse(stored) as string[];
+        setPastMistakesCount(mistakes.length);
+      }
+    } catch {}
+  }, [moduleId]);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // SETUP LOGIC (Smart Ordering & Shuffling)
+  // ───────────────────────────────────────────────────────────────────────────
+  function handleStartQuiz() {
+    let mistakes: string[] = [];
+    try {
+      const stored = localStorage.getItem(`medqcm_mistakes_${moduleId}`);
+      if (stored) mistakes = JSON.parse(stored);
+    } catch {}
+
+    // Sort: Mistakes first, then random for the rest
+    let sortedQuestions = [...rawQuestions].sort((a, b) => {
+      const aMistake = mistakes.includes(a.id);
+      const bMistake = mistakes.includes(b.id);
+      
+      if (aMistake && !bMistake) return -1; // a comes first
+      if (!aMistake && bMistake) return 1;  // b comes first
+      return Math.random() - 0.5; // shuffle equally
+    });
+
+    // Limit count based on user selection
+    if (selectedCount !== 'all') {
+      sortedQuestions = sortedQuestions.slice(0, selectedCount);
+    }
+
+    // Shuffle options for EVERY question to prevent memorization by position
+    const finalizedQuestions = sortedQuestions.map(q => ({
+      ...q,
+      options: shuffleArray(q.options)
+    }));
+
+    setActiveQuestions(finalizedQuestions);
+    setQuizState('playing');
+
+    const duration = modeParam === 'exam' ? finalizedQuestions.length * 90 : 0;
     initQuiz({
       mode: modeParam,
       moduleId,
-      totalQuestions: questions.length,
+      totalQuestions: finalizedQuestions.length,
       durationSeconds: duration,
     });
-  }, [moduleId, modeParam, questions.length, initQuiz]);
+  }
 
-  // Countdown timer in exam mode
+  // ───────────────────────────────────────────────────────────────────────────
+  // PLAYING EFFECTS
+  // ───────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (modeParam !== 'exam' || !timerActive) return;
+    if (quizState !== 'playing' || modeParam !== 'exam' || !timerActive) return;
     const interval = setInterval(() => {
       tickTimer();
     }, 1000);
     return () => clearInterval(interval);
-  }, [modeParam, timerActive, tickTimer]);
+  }, [quizState, modeParam, timerActive, tickTimer]);
 
-  // Anti-cheat tab detector in exam mode
   useEffect(() => {
-    if (modeParam !== 'exam') return;
+    if (quizState !== 'playing' || modeParam !== 'exam') return;
     function handleVisibilityChange() {
       if (document.hidden) setTabSwitches((prev) => prev + 1);
     }
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [modeParam]);
+  }, [quizState, modeParam]);
 
-  const currentQuestion = questions[currentIndex];
-
-  // Reset local state when moving to next question
   useEffect(() => {
     setSelectedOptIds([]);
     setFeedbackStatus('idle');
@@ -137,51 +196,133 @@ export default function DuolingoQuizSessionPage() {
     setReportComment('');
   }, [currentIndex]);
 
-  if (!currentQuestion) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (showReportModal || quizState !== 'playing') return;
+      const currentQ = activeQuestions[currentIndex];
+      if (!currentQ) return;
+
+      if (feedbackStatus === 'idle') {
+        if (['1', '2', '3', '4', '5'].includes(e.key)) {
+          const idx = parseInt(e.key, 10) - 1;
+          if (currentQ.options[idx]) {
+            handleToggleOption(currentQ.options[idx].id);
+          }
+        }
+        if (e.key === 'Enter' && selectedOptIds.length > 0) handleCheckAnswer();
+      } else {
+        if (e.key === 'Enter') handleContinue();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [feedbackStatus, selectedOptIds, currentIndex, activeQuestions, showReportModal, quizState]);
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // RENDER SETUP
+  // ───────────────────────────────────────────────────────────────────────────
+  if (quizState === 'setup') {
+    const counts: (number | 'all')[] = [20, 40, 60, 80, 100, 'all'];
+    const maxQ = rawQuestions.length;
+
     return (
-      <div className="max-w-xl mx-auto py-16 text-center space-y-4">
-        <p className="text-sm text-gray-500">Chargement de la session...</p>
+      <div className="min-h-screen bg-surface-50 dark:bg-dark-bg flex flex-col items-center justify-center p-4">
+        <div className="max-w-xl w-full card p-8 space-y-8 slide-in">
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Settings2 className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black text-gray-900 dark:text-white">
+              Configuration de la session
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">
+              Module: <span className="text-emerald-600 dark:text-emerald-400">{moduleInfo?.module.nameFr || 'Inconnu'}</span>
+            </p>
+          </div>
+
+          {pastMistakesCount > 0 && (
+            <div className="bg-amber-50 border-2 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900/50 p-4 rounded-2xl flex items-start gap-3">
+              <BarChart2 className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0" />
+              <div>
+                <h3 className="font-bold text-amber-900 dark:text-amber-300">Répétition Espacée Active</h3>
+                <p className="text-sm text-amber-700/80 dark:text-amber-500/80 mt-1">
+                  Vous avez <b>{pastMistakesCount} erreurs</b> enregistrées sur ce module. Elles apparaîtront en priorité lors de cette session pour consolider vos acquis.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 text-center">
+              Combien de questions voulez-vous traiter ?
+            </label>
+            <div className="grid grid-cols-3 gap-3">
+              {counts.map((c) => {
+                if (c !== 'all' && c > maxQ && maxQ > 0) return null; // Hide options larger than total questions
+                const isSelected = selectedCount === c;
+                return (
+                  <button
+                    key={c}
+                    onClick={() => setSelectedCount(c)}
+                    className={`py-3 rounded-xl font-black text-sm transition-all border-2 ${
+                      isSelected 
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 shadow-sm' 
+                        : 'border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:border-emerald-300'
+                    }`}
+                  >
+                    {c === 'all' ? `Toutes (${maxQ})` : c}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button onClick={handleStartQuiz} className="btn-duo-green w-full py-4 text-lg">
+            <Play className="w-5 h-5 mr-2" />
+            C'est parti !
+          </button>
+          
+          <div className="text-center">
+            <Link href={moduleInfo ? `/fr/years/${moduleInfo.year.number}` : '/fr/years'} className="text-sm font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              Retour
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
+  // ───────────────────────────────────────────────────────────────────────────
+  // PLAYING RENDER
+  // ───────────────────────────────────────────────────────────────────────────
+  const currentQuestion = activeQuestions[currentIndex];
+
+  if (!currentQuestion) return null;
+
+  const progressPercent = Math.round(((currentIndex + 1) / activeQuestions.length) * 100);
   const correctOptions = currentQuestion.options.filter((o) => o.isCorrect);
   const correctOptionIds = correctOptions.map((o) => o.id);
   const isMultipleChoice = correctOptions.length > 1;
 
-  // Toggle selection for multiple or single choice
   function handleToggleOption(optId: string) {
-    if (feedbackStatus !== 'idle') return; // locked after validation
-
+    if (feedbackStatus !== 'idle') return;
     if (isMultipleChoice) {
-      // Toggle multiple options
       setSelectedOptIds((prev) =>
         prev.includes(optId) ? prev.filter((id) => id !== optId) : [...prev, optId]
       );
     } else {
-      // Single choice toggle
       setSelectedOptIds((prev) => (prev.includes(optId) ? [] : [optId]));
     }
   }
 
-  // Check answer button (Duolingo "VÉRIFIER")
   function handleCheckAnswer() {
     if (selectedOptIds.length === 0) return;
 
-    // A question is correct if and only if:
-    // 1. Every selected option is correct
-    // 2. Every correct option was selected
     const isCorrect =
       selectedOptIds.length === correctOptionIds.length &&
       correctOptionIds.every((id) => selectedOptIds.includes(id));
 
-    answerQuestion(
-      currentQuestion.id,
-      selectedOptIds[0] || '',
-      isCorrect,
-      selectedOptIds
-    );
+    answerQuestion(currentQuestion.id, selectedOptIds[0] || '', isCorrect, selectedOptIds);
 
     if (isCorrect) {
       setFeedbackStatus('correct');
@@ -193,20 +334,38 @@ export default function DuolingoQuizSessionPage() {
     }
   }
 
-  // Move to next question or complete (Duolingo "CONTINUER")
   function handleContinue() {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex < activeQuestions.length - 1) {
       goToNext();
     } else {
+      // End of quiz logic: Save mistakes to localStorage
+      try {
+        const stored = localStorage.getItem(`medqcm_mistakes_${moduleId}`);
+        let mistakes: string[] = stored ? JSON.parse(stored) : [];
+        
+        // Add new mistakes, remove fixed ones
+        Object.values(answers).forEach((ans) => {
+          if (!ans.isCorrect && !mistakes.includes(ans.questionId)) {
+            mistakes.push(ans.questionId);
+          } else if (ans.isCorrect && mistakes.includes(ans.questionId)) {
+            mistakes = mistakes.filter(id => id !== ans.questionId);
+          }
+        });
+        
+        localStorage.setItem(`medqcm_mistakes_${moduleId}`, JSON.stringify(mistakes));
+      } catch (e) {
+        console.error("Failed to save mistakes", e);
+      }
+
       completeQuiz(`attempt-${Date.now()}`);
       if (typeof window !== 'undefined') {
         window.sessionStorage.setItem('medqcm_current_quiz', JSON.stringify({
           moduleId,
           moduleName: moduleInfo?.module.nameFr || 'Session d\'entraînement',
           mode: modeParam,
-          questions,
+          questions: activeQuestions,
           answers,
-          timeSpent: (questions.length * 90) - timerSeconds,
+          timeSpent: (activeQuestions.length * 90) - timerSeconds,
           tabSwitches,
         }));
       }
@@ -214,10 +373,8 @@ export default function DuolingoQuizSessionPage() {
     }
   }
 
-  // Handle reporting error
   function handleSubmitReport(e: React.FormEvent) {
     e.preventDefault();
-    // In demo / client mode: save to localStorage or state
     try {
       const existingReports = JSON.parse(localStorage.getItem('medqcm_question_reports') || '[]');
       existingReports.push({
@@ -230,9 +387,7 @@ export default function DuolingoQuizSessionPage() {
         status: 'pending'
       });
       localStorage.setItem('medqcm_question_reports', JSON.stringify(existingReports));
-    } catch {
-      // ignore
-    }
+    } catch {}
     setReportSubmitted(true);
     setTimeout(() => {
       setShowReportModal(false);
@@ -240,53 +395,33 @@ export default function DuolingoQuizSessionPage() {
     }, 1500);
   }
 
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (showReportModal) return;
-      if (feedbackStatus === 'idle') {
-        if (['1', '2', '3', '4', '5'].includes(e.key)) {
-          const idx = parseInt(e.key, 10) - 1;
-          if (currentQuestion.options[idx]) {
-            handleToggleOption(currentQuestion.options[idx].id);
-          }
-        }
-        if (e.key === 'Enter' && selectedOptIds.length > 0) {
-          handleCheckAnswer();
-        }
-      } else {
-        if (e.key === 'Enter') {
-          handleContinue();
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [feedbackStatus, selectedOptIds, currentQuestion, showReportModal]);
 
-  // Formatted timer
+
   const minutes = Math.floor(timerSeconds / 60);
   const seconds = timerSeconds % 60;
   const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-  const correctLetters = correctOptions
-    .map((o) => String.fromCharCode(65 + currentQuestion.options.findIndex((opt) => opt.id === o.id)))
+  // Find correct letters visually based on current shuffled order
+  const correctLetters = currentQuestion.options
+    .map((opt, idx) => opt.isCorrect ? String.fromCharCode(65 + idx) : null)
+    .filter(Boolean)
     .join(', ');
 
   return (
     <div className="min-h-screen bg-[#ffffff] dark:bg-dark-bg flex flex-col justify-between pb-36">
-      {/* ── Top Bar: Close, Progress Pill, Hearts/Timer ──────────────── */}
+      {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <div className="max-w-4xl w-full mx-auto px-4 pt-6 pb-2 flex items-center justify-between gap-4">
-        {/* Close Button */}
-        <Link
-          href={moduleInfo ? `/fr/years/${moduleInfo.year.number}` : '/fr/years'}
+        <button
+          onClick={() => {
+            if (confirm('Voulez-vous vraiment quitter cette session ? La progression sera perdue.')) {
+              router.push(moduleInfo ? `/fr/years/${moduleInfo.year.number}` : '/fr/years');
+            }
+          }}
           className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-dark-muted transition-all shrink-0"
-          title="Quitter la session"
         >
           <X className="w-6 h-6 stroke-[2.5]" />
-        </Link>
+        </button>
 
-        {/* Duolingo Chunky Progress Bar */}
         <div className="flex-1 h-4 bg-gray-200 dark:bg-dark-muted rounded-full overflow-hidden p-0.5 relative shadow-inner">
           <div
             className="h-full bg-[#10b981] rounded-full transition-all duration-300 relative shadow-sm"
@@ -296,12 +431,10 @@ export default function DuolingoQuizSessionPage() {
           </div>
         </div>
 
-        {/* Right: Sound toggle & Hearts or Timer */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-xl"
-            title={soundEnabled ? 'Désactiver le son' : 'Activer le son'}
           >
             {soundEnabled ? <Volume2 className="w-5 h-5 text-emerald-600" /> : <VolumeX className="w-5 h-5" />}
           </button>
@@ -320,7 +453,6 @@ export default function DuolingoQuizSessionPage() {
         </div>
       </div>
 
-      {/* Tab Switch Warning in Exam Mode */}
       {tabSwitches > 0 && modeParam === 'exam' && (
         <div className="max-w-4xl mx-auto px-4 w-full mt-2">
           <div className="p-3 bg-red-50 border-2 border-red-200 dark:bg-red-950/30 dark:border-red-900 rounded-2xl text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2.5">
@@ -332,7 +464,6 @@ export default function DuolingoQuizSessionPage() {
 
       {/* ── Main Question Card ───────────────────────────────────────── */}
       <div className="max-w-2xl w-full mx-auto px-4 py-6 space-y-5 flex-1 flex flex-col justify-center">
-        {/* Header & Badges */}
         <div className="flex items-start gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-card shrink-0">
             🩺
@@ -354,12 +485,10 @@ export default function DuolingoQuizSessionPage() {
                 )}
               </div>
 
-              {/* Report Mistake Button */}
               <button
                 type="button"
                 onClick={() => setShowReportModal(true)}
                 className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors p-1"
-                title="Signaler une erreur sur ce QCM"
               >
                 <Flag className="w-3.5 h-3.5" />
                 <span>Signaler une erreur</span>
@@ -372,7 +501,7 @@ export default function DuolingoQuizSessionPage() {
           </div>
         </div>
 
-        {/* Tactile 3D Option Cards (Supports Multi-Selection) */}
+        {/* Options */}
         <div className="space-y-3 pt-1">
           {currentQuestion.options.map((option, idx) => {
             const letter = String.fromCharCode(65 + idx);
@@ -402,27 +531,22 @@ export default function DuolingoQuizSessionPage() {
                 onClick={() => handleToggleOption(option.id)}
                 className={cardClass}
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5 text-left">
                   <span className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border border-black/5 ${letterBadge}`}>
                     {letter}
                   </span>
-
                   <span className="flex-1 text-sm sm:text-base font-bold text-[#1a2e25] dark:text-green-50">
                     {option.text}
                   </span>
 
-                  {/* Multi-selection Checkbox Indicator */}
                   {feedbackStatus === 'idle' && (
-                    <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? 'border-sky-500 bg-sky-500 text-white'
-                        : 'border-gray-300 dark:border-gray-600'
+                    <div className={`shrink-0 w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-colors ${
+                      isSelected ? 'border-sky-500 bg-sky-500 text-white' : 'border-gray-300 dark:border-gray-600'
                     }`}>
                       {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
                   )}
 
-                  {/* Post-validation indicators */}
                   {feedbackStatus !== 'idle' && isCorrectAnswer && (
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   )}
@@ -436,7 +560,7 @@ export default function DuolingoQuizSessionPage() {
         </div>
       </div>
 
-      {/* ── DUOLINGO BOTTOM DRAWER ───────────────────────────────────── */}
+      {/* ── DRAWER ─────────────────────────────────────────────────────── */}
       <footer className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-200 border-t-2 ${
         feedbackStatus === 'correct'
           ? 'bg-[#d7ffb8] border-[#a5ed6e] text-[#256c00] dark:bg-emerald-950/95 dark:border-emerald-700'
@@ -445,7 +569,6 @@ export default function DuolingoQuizSessionPage() {
           : 'bg-white dark:bg-dark-card border-gray-200 dark:border-dark-border shadow-md'
       }`}>
         <div className="max-w-4xl mx-auto px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          {/* Feedback message and explanation */}
           {feedbackStatus === 'idle' ? (
             <div className="hidden sm:block text-xs font-bold text-gray-500 dark:text-gray-400">
               {isMultipleChoice
@@ -482,7 +605,6 @@ export default function DuolingoQuizSessionPage() {
             </div>
           )}
 
-          {/* Action Button: VERIFIER vs CONTINUER */}
           <div className="shrink-0 self-end sm:self-center w-full sm:w-auto">
             {feedbackStatus === 'idle' ? (
               <button
@@ -514,7 +636,7 @@ export default function DuolingoQuizSessionPage() {
         </div>
       </footer>
 
-      {/* ── REPORT MISTAKE MODAL ──────────────────────────────────────── */}
+      {/* ── REPORT MODAL ───────────────────────────────────────────────── */}
       {showReportModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in">
@@ -547,7 +669,7 @@ export default function DuolingoQuizSessionPage() {
                   Signalement transmis à l'équipe médicale !
                 </h4>
                 <p className="text-xs text-gray-500">
-                  Merci pour votre contribution à l'amélioration de la banque de questions.
+                  Merci pour votre contribution.
                 </p>
               </div>
             ) : (
@@ -561,41 +683,30 @@ export default function DuolingoQuizSessionPage() {
                     onChange={(e) => setReportReason(e.target.value)}
                     className="input w-full text-xs rounded-xl"
                   >
-                    <option value="correction_error">Erreur dans la correction (la bonne réponse est fausse)</option>
-                    <option value="ambiguous_question">Énoncé ambigu ou mal formulé</option>
-                    <option value="typo_error">Faute de frappe ou coquille d'orthographe</option>
-                    <option value="explanation_incomplete">Explication théorique incomplète ou obsolète</option>
+                    <option value="correction_error">Erreur dans la correction</option>
+                    <option value="ambiguous_question">Énoncé ambigu</option>
+                    <option value="typo_error">Faute de frappe</option>
+                    <option value="explanation_incomplete">Explication incomplète</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">
-                    Votre remarque ou justification médicale
+                    Remarque médicale
                   </label>
                   <textarea
                     required
                     rows={3}
                     value={reportComment}
                     onChange={(e) => setReportComment(e.target.value)}
-                    placeholder="Ex: Selon le collège d'Anatomie 2024 (p. 68), la réponse D est également juste car..."
                     className="input w-full resize-none text-xs rounded-xl"
                   />
                 </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setShowReportModal(false)}
-                    className="btn-ghost text-xs"
-                  >
+                <div className="flex justify-end gap-2 pt-2 border-t">
+                  <button type="button" onClick={() => setShowReportModal(false)} className="btn-ghost text-xs">
                     Annuler
                   </button>
-                  <button
-                    type="submit"
-                    className="btn-duo-green text-xs py-2 px-4 shadow"
-                  >
-                    <Send className="w-3.5 h-3.5 mr-1" />
-                    Envoyer le signalement
+                  <button type="submit" className="btn-duo-green text-xs py-2 px-4 shadow">
+                    <Send className="w-3.5 h-3.5 mr-1" /> Envoyer
                   </button>
                 </div>
               </form>
