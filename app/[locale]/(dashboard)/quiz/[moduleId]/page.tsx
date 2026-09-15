@@ -125,6 +125,13 @@ export default function DuolingoQuizSessionPage() {
     } catch {}
   }, [moduleId]);
 
+  // Fallback to 'all' if there are less than 20 questions
+  useEffect(() => {
+    if (rawQuestions.length < 20) {
+      setSelectedCount('all');
+    }
+  }, [rawQuestions.length]);
+
   // ───────────────────────────────────────────────────────────────────────────
   // SETUP LOGIC (Smart Ordering & Shuffling)
   // ───────────────────────────────────────────────────────────────────────────
@@ -258,19 +265,24 @@ export default function DuolingoQuizSessionPage() {
             </label>
             <div className="grid grid-cols-3 gap-3">
               {counts.map((c) => {
-                if (c !== 'all' && c > maxQ && maxQ > 0) return null; // Hide options larger than total questions
+                const isAll = c === 'all';
+                const isDisabled = !isAll && c > maxQ && maxQ > 0;
                 const isSelected = selectedCount === c;
+                
                 return (
                   <button
                     key={c}
+                    disabled={isDisabled}
                     onClick={() => setSelectedCount(c)}
                     className={`py-3 rounded-xl font-black text-sm transition-all border-2 ${
-                      isSelected 
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 shadow-sm' 
-                        : 'border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:border-emerald-300'
+                      isDisabled
+                        ? 'border-gray-100 bg-gray-50 text-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-gray-600 cursor-not-allowed opacity-50'
+                        : isSelected 
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 shadow-sm' 
+                          : 'border-gray-200 dark:border-dark-border bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:border-emerald-300'
                     }`}
                   >
-                    {c === 'all' ? `Toutes (${maxQ})` : c}
+                    {isAll ? `Toutes (${maxQ})` : c}
                   </button>
                 );
               })}
