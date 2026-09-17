@@ -14,6 +14,24 @@ Continue building a reliable medical QCM application backed by Supabase. The own
 
 The owner authorized the authentication work and production URL setup. The stages below are a proposed continuation plan, not a claim that they are implemented. Confirm the next requested milestone with the owner if the new task does not specify one. Never infer authorization to grant admin access, delete data, or send messages to third parties.
 
+## Current fix list and implementation order
+
+Status reflects code through `ec500cb`. Implemented does not mean live end-to-end verified.
+
+| Work item | Current status | Next action |
+| --- | --- | --- |
+| Authentication, permissions, profile, password changes | Implemented; live acceptance tests pending | Complete stage 2 with controlled identities; verify Google UI matches provider availability. |
+| Quiz engine | Outstanding — next coding priority | Complete stage 3: scoring, timer, submission, counts, unavailable modules, and results consistency. |
+| Persistent quiz history | Outstanding — follows engine | Establish schema/RLS in stage 4, then save and retrieve durable attempts in stage 5A. |
+| Live activity and statistics | Outstanding — follows history | Replace mock/session-only data with completed attempts in stage 5B. |
+| Exams hub | Route, curriculum filters, and preparation state implemented | Enable sessions only after engine verification and reviewed question availability. |
+| Student PDF alert | Replaced with a native status dialog; fake reminders removed | Keep preparation state until actual files exist; notifications require a separate real delivery feature. |
+| Landing/subscription pricing | Shared pricing implemented; annual price 4 500 DA | Preserve shared values and verify French/English presentation. |
+| Receipts and admin subscriptions | Outstanding | Implement stage 7: private uploads, pending requests, admin decisions, and server-enforced entitlement. |
+| PDF/question publishing | Outstanding; content still being prepared | Implement stage 8 when source content is available. |
+
+**Execution order:** establish current state → fix quiz engine → persistent data/permissions → persistent history → statistics → enable eligible exams → receipts/subscriptions → PDF publishing. Authentication acceptance remains a prerequisite for trusting live user-owned data; local engine fixes can proceed while user-led email tests are pending. Do not redo completed pricing, dialog, or hub work.
+
 ## Follow-up correction to the visible-fixes sprint
 
 The exam hub now lists real curriculum modules with search and year filters, but intentionally offers no exam launch until question banks and timer/scoring are verified. It no longer advertises fabricated official exams, question counts, or ignored count parameters. Implement stage 3 before enabling launches, including parsing and validating any future count parameter.
@@ -28,7 +46,7 @@ The student PDF dialog uses native modal focus containment and Escape dismissal 
 4. Verify Vercel points to the intended revision and public Supabase project variables. Keep `.env.local` ignored. Never put a service-role key in a browser bundle or documentation.
 5. Inspect the actual Supabase schema and policies before proposing migrations. No database or storage migrations were applied in this sprint.
 
-## 2. Finish authentication acceptance testing first
+## 2. Complete authentication acceptance before live data rollout
 
 Already implemented: verified Supabase sessions, server admin guards, real profile metadata, real password changes, confirmation/recovery callback, safer logout, removal of demo access, and basic regression tests. Do not rebuild these from scratch.
 
@@ -50,12 +68,18 @@ Acceptance: all flows work against the intended deployment; no demo bypass or cr
 Recheck these earlier findings in the current implementation:
 
 1. Multi-answer results may read only `selectedOptionId` instead of `selectedOptionIds`. Define and test scoring for exact matches, partial choices, unanswered questions, and single-answer questions.
-2. Timer expiry may mark the store complete without submitting. Route manual finish and expiry through one idempotent completion path.
-3. Non-exam duration may use a fixed question-count estimate. Track real start/completion timestamps and define behavior for background tabs, refresh, and resumed attempts.
+2. Timer expiry may mark the store complete without submitting. Route manual finish and expiry through one idempotent completion path (repeated calls must produce only one attempt). Include the current uncommitted selection, lock editing after completion, and prevent double-click/expiry races.
+3. Non-exam duration may use a fixed question-count estimate. Track real start/completion timestamps. In timed mode, derive remaining time from a deadline rather than assuming each interval tick equals one elapsed second. Define refresh/resume behavior explicitly and retain the same question/option order when resuming.
 4. Empty or unknown modules may fall back to unrelated questions. Show a clear unavailable/content-in-preparation state.
 5. Review mistake ordering and randomization. Do not describe simple mistake-first ordering as spaced repetition; use an unbiased shuffle where needed.
 
-Acceptance: deterministic scoring tests cover multiple selections; expiry completes once; elapsed time is credible; unavailable modules never serve unrelated content.
+6. Parse and validate the requested mode and question count at quiz setup. Reject invalid values or show the actual supported count; never advertise more questions than exist. Keep the hub launch controls disabled until this contract works.
+7. Extract scoring into one testable function used consistently by completion and results rendering. Preserve all selected option IDs and the question version; avoid recomputing a historical result against subsequently edited questions. Document the scoring rule without calling it official unless verified.
+8. Preserve the current locale on results/exit navigation and show recoverable errors when a result cannot be saved. Separate completion from persistence status so a network retry does not restart the quiz.
+
+Start with `stores/quizStore.ts`, `app/[locale]/(dashboard)/quiz/[moduleId]/page.tsx`, and `app/[locale]/(dashboard)/quiz/results/page.tsx`.
+
+Acceptance: tests cover single/multiple answers, unanswered questions, invalid counts, empty modules, background/expired timers, duplicate finish calls, and consistent result rendering. Expiry completes once, elapsed time is credible, and unavailable modules never serve unrelated content.
 
 ## 4. Establish persistent data and permissions
 
@@ -68,20 +92,33 @@ Acceptance: deterministic scoring tests cover multiple selections; expiry comple
 
 Acceptance: migrations are reviewable and repeatable; cross-account reads/writes fail; users cannot forge paid status, roles, or scores. Do not blindly run destructive schema synchronization on live data.
 
-## 5. Persist history and build truthful statistics
+## 5. Connect persistent history, then statistics
 
-1. Replace single-attempt session storage with durable, user-owned attempt history. Avoid importing anonymous mistakes into an unrelated authenticated account.
-2. Derive recent activity, accuracy, time, streaks, and weak modules from completed attempts. Define timezone and incomplete-attempt handling.
-3. Display human-readable module names and meaningful empty states for new users.
-4. Verify refresh, another browser, and a second account; retrying a submission must not duplicate history.
+### 5A. Persistent history
 
-Acceptance: completing a quiz updates history and stats, persists across devices, and remains isolated by user.
+1. After stage 4, add an authenticated server operation that accepts a stable attempt ID and selected answers. Resolve the owner from the verified session; validate module/question membership and calculate the score server-side.
+2. Write the attempt and answers atomically with a uniqueness rule for retries. Store mode, question version/order, all selected option IDs, total/answered/correct counts, timestamps, duration, and completion status. Finalized attempts must not be freely editable by students.
+3. Replace single-attempt session storage as the source of truth. Local state can support an in-progress draft or retry, but must be scoped to the authenticated account and must never silently import another user's or anonymous history.
+4. Load the results page by attempt ID and provide a paginated history query restricted to the current user. Handle loading, empty, missing, forbidden, and failed-save states explicitly.
+5. Test refresh, a second device/browser, sign-out/account switching, network failure followed by retry, and attempted access to another student's attempt.
+
+Acceptance: a completed quiz survives refresh and another browser; retries produce one record; partial writes and cross-account reads/writes fail; unsaved results are clearly identified.
+
+### 5B. Live activity and statistics
+
+1. Read completed attempts from the history API/database rather than hardcoded data or the latest session-storage entry. Update/invalidate queries after a successful completion.
+2. Define each metric before implementing it: accuracy denominator, total completed questions, elapsed study time, streak timezone/day boundary, and weak-module ranking with a minimum evidence threshold. Exclude abandoned attempts consistently.
+3. Populate the recent activity timeline with module names, completion dates, mode and score. Use stable ordering and pagination or a bounded recent list.
+4. Derive charts and summary cards from the same data source. New users see zeros and helpful empty states, never fabricated activity.
+5. Use fixed test histories to verify aggregates, repeated attempts, unanswered questions, date boundaries, and empty histories. Verify a newly finished quiz updates the timeline and summary without requiring logout.
+
+Acceptance: displayed metrics agree with stored completed attempts, persist across devices, update after completion, and remain isolated by user.
 
 ## 6. Complete visible student-facing fixes
 
-1. Build `/[locale]/exams` so the sidebar destination works. Start with a polished preparation state and available filters; attach the timed simulator after stage 3. Use an official countdown only when a verified date exists.
-2. Replace the depot PDF browser alert with an accessible modal or status badge. Say the document is being prepared unless faculty validation is actually established.
-3. Put pricing in one shared source. The requested annual price is **4 500 DA / an**; confirm other plans before changing their amounts. Synchronize landing and subscription pages.
+1. Preserve the implemented `/[locale]/exams` preparation hub and filters. Attach the timed simulator only after stage 3 and reviewed question availability. Use an official countdown only when a verified date exists.
+2. Preserve the implemented native PDF status dialog and absence of fake reminders. Say the document is being prepared unless faculty validation is actually established.
+3. Preserve the implemented shared pricing source in `lib/config/pricing.ts`. The requested annual price is **4 500 DA / an**; confirm other plans before changing their amounts. Synchronize landing and subscription pages.
 4. Check French/English navigation, keyboard interaction, mobile layout, loading/error states, and unsupported marketing figures.
 
 Acceptance: no dead primary navigation, fake download success, blank pricing, or fabricated availability.
@@ -129,6 +166,8 @@ The route test includes logout requests; run it against a local test instance. I
 - Record migration/deployment steps and verify the deployed behavior on the actual public URL.
 - Update this guide with what passed, what remains, and the next concrete action. Distinguish local tests, live read-only checks, and live authenticated tests.
 
+The corrective UI commit passed TypeScript, targeted lint, three authentication policy tests, and `npx next build --webpack`. Default Turbopack builds hit a local worker/port permission restriction; this was not a verified application compile failure. Validate the deployment separately.
+
 ## Suggested next prompt
 
-“Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md in MedQcm. Start with stage 2: verify and finish the live authentication flows on https://qcmmed.vercel.app using my controlled test accounts. Preserve existing changes, never expose credentials, and tell me which checks require my browser interaction. Then report the evidence and propose the next milestone.”
+“Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md in MedQcm. Start with stage 3: fix and test the quiz engine. Then implement stage 4 and stage 5 in order: persistent data and permissions, durable user-owned history, and live statistics. Preserve completed UI/auth work and other contributors’ changes. Keep exams in preparation until the engine and reviewed question banks are ready. Never expose credentials. Report tests, migrations, outstanding live authentication checks, and deployment status after each milestone.”
