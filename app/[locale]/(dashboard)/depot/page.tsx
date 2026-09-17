@@ -4,13 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   FolderArchive, FileText, Download, Lock, Search,
-  BookOpen, Sparkles, CheckCircle2, ArrowRight
+  BookOpen, Sparkles, CheckCircle2, ArrowRight,
+  Clock, Bell
 } from 'lucide-react';
 import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum';
 
 export default function StudentDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);
   const [search, setSearch] = useState('');
+  const [selectedDoc, setSelectedDoc] = useState<{ moduleName: string; title: string; moduleId: string } | null>(null);
+  const [reminderSubscribed, setReminderSubscribed] = useState(false);
 
   const currentYearObj = CURRICULUM_DATA.find((y) => y.number === selectedYear);
 
@@ -46,7 +49,7 @@ export default function StudentDepotPage() {
             key={y.number}
             type="button"
             onClick={() => setSelectedYear(y.number)}
-            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+            className={`px-3.5 py-2 rounded-2xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
               selectedYear === y.number
                 ? 'bg-emerald-600 text-white shadow-md'
                 : 'bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 hover:border-emerald-400'
@@ -69,24 +72,22 @@ export default function StudentDepotPage() {
         />
       </div>
 
-      {/* Categories and Attached PDFs */}
-      <div className="space-y-8">
+      {/* Modules & PDFs Grid */}
+      <div className="space-y-6">
         {currentYearObj?.categories.map((cat) => (
-          <div key={cat.id} className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b-2 border-gray-100 dark:border-dark-border">
-              <BookOpen className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-black text-[#1a2e25] dark:text-green-50">
-                {cat.nameFr}
-              </h2>
-            </div>
+          <div key={cat.id} className="space-y-3">
+            <h2 className="text-base font-black text-[#1a2e25] dark:text-green-50 flex items-center gap-2">
+              <FolderArchive className="w-4 h-4 text-emerald-600" />
+              {cat.nameFr}
+            </h2>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cat.modules.map((mod) => {
                 const docs: CoursePdf[] = mod.documents || [
                   {
-                    id: `pdf-default-${mod.id}`,
+                    id: `${mod.id}-pdf-1`,
                     moduleId: mod.id,
-                    title: `Polycopié de Référence — ${mod.nameFr}`,
+                    title: `Polycopié Officiel — ${mod.nameFr}`,
                     professor: 'Faculté de Médecine',
                     fileSize: '5.2 Mo',
                     pagesCount: 45,
@@ -152,8 +153,15 @@ export default function StudentDepotPage() {
                       {mod.isFree ? (
                         <button
                           type="button"
-                          onClick={() => alert('Téléchargement du polycopié officiel en cours...')}
-                          className="btn-duo-green text-xs py-2 px-4 shadow-xs flex items-center gap-1.5"
+                          onClick={() => {
+                            setSelectedDoc({
+                              moduleName: mod.nameFr,
+                              title: filteredDocs[0]?.title || `Polycopié de ${mod.nameFr}`,
+                              moduleId: mod.id,
+                            });
+                            setReminderSubscribed(false);
+                          }}
+                          className="btn-duo-green text-xs py-2 px-4 shadow-xs flex items-center gap-1.5 cursor-pointer"
                         >
                           <Download className="w-3.5 h-3.5" />
                           Consulter le PDF
@@ -182,6 +190,83 @@ export default function StudentDepotPage() {
           </div>
         ))}
       </div>
+
+      {/* Accessible Document Status Modal */}
+      {selectedDoc && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="depot-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in"
+        >
+          <div className="bg-white dark:bg-dark-card rounded-3xl p-6 sm:p-8 max-w-lg w-full border-2 border-primary-200 dark:border-dark-border shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-dark-border">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center font-bold">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-400">
+                    Document en préparation
+                  </span>
+                  <h3 id="depot-modal-title" className="text-sm sm:text-base font-black text-[#1a2e25] dark:text-green-50">
+                    {selectedDoc.title}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDoc(null)}
+                className="text-gray-400 hover:text-gray-600 text-lg font-bold p-1 cursor-pointer"
+                aria-label="Fermer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+              <p>
+                Le polycopié officiel pour le module <strong>{selectedDoc.moduleName}</strong> est actuellement en cours de numérisation et d&apos;indexation pédagogique pour garantir des supports conformes aux programmes des facultés.
+              </p>
+              <p>
+                En attendant la mise en ligne du fichier PDF complet, vous pouvez d&apos;ores et déjà vous entraîner sur les QCMs et cas cliniques associés à cette matière.
+              </p>
+            </div>
+
+            {reminderSubscribed ? (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Rappel enregistré ! Vous serez notifié dès que ce document sera consultable.</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setReminderSubscribed(true)}
+                className="w-full py-2.5 px-4 rounded-xl border-2 border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                M&apos;avertir dès publication de ce cours
+              </button>
+            )}
+
+            <div className="pt-3 border-t border-gray-100 dark:border-dark-border flex flex-col sm:flex-row items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedDoc(null)}
+                className="btn-secondary text-xs py-2 px-4 w-full sm:w-auto cursor-pointer"
+              >
+                Fermer
+              </button>
+              <Link
+                href={`/fr/quiz/${selectedDoc.moduleId}?mode=exploration`}
+                className="btn-primary text-xs py-2 px-4 w-full sm:w-auto flex items-center justify-center gap-1.5"
+              >
+                Pratiquer les QCMs <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

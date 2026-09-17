@@ -281,14 +281,13 @@ export default function AdminDepotPage() {
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-gray-100 dark:border-dark-border flex items-center justify-between gap-2">
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); alert('Téléchargement du polycopié en cours...'); }}
-                    className="inline-flex items-center gap-1.5 text-xs font-black text-gray-700 dark:text-gray-300 hover:text-emerald-600"
+                  <span
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 cursor-not-allowed"
+                    title="Fichier en cours d'indexation"
                   >
                     <Download className="w-4 h-4" />
-                    Télécharger
-                  </a>
+                    Fichier en préparation
+                  </span>
 
                   {/* AI QCM Extraction Shortcut */}
                   <Link

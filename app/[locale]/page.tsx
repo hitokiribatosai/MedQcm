@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Stethoscope, BookOpen, Clock, BarChart3, FileUp, ArrowRight, Star, Users, Brain } from 'lucide-react';
+import { SUBSCRIPTION_PRICING } from '@/lib/config/pricing';
 
 // Animated background blobs
 function Blobs() {
@@ -164,9 +165,21 @@ export default function HomePage() {
           </div>
           {/* Premium tier */}
           <div className="card p-8 flex flex-col gap-4 border-2 border-primary-500 relative overflow-hidden">
-            <div className="absolute top-4 right-4 badge-free">BEST</div>
+            <div className="absolute top-4 right-4 badge-free">{SUBSCRIPTION_PRICING.annual.badge}</div>
             <h3 className="text-xl font-bold text-gradient">{t('subscribe.premium_tier')}</h3>
-            <p className="text-4xl font-extrabold text-primary-600">— DA / an</p>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <p className="text-4xl font-extrabold text-primary-600">
+                  {SUBSCRIPTION_PRICING.annual.formattedPrice}
+                </p>
+                <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                  {SUBSCRIPTION_PRICING.annual.billingPeriod}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                Soit {SUBSCRIPTION_PRICING.annual.formattedEquivalent} • Sans tacite reconduction
+              </p>
+            </div>
             <p className="text-sm text-[#4b7a62] dark:text-green-400">
               ✓ {t('subscribe.premium_includes')}
             </p>

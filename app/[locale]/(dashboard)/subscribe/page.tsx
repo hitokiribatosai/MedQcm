@@ -5,6 +5,7 @@ import {
   Check, ShieldCheck, UploadCloud, AlertCircle, Clock,
   CreditCard, Phone, FileCheck, ArrowRight, Sparkles, Copy, Mail, CheckCircle2
 } from 'lucide-react';
+import { SUBSCRIPTION_PRICING } from '@/lib/config/pricing';
 
 interface PaymentDetail {
   label: string;
@@ -56,6 +57,7 @@ export default function SubscribePage() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'pending' | 'active'>('idle');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -79,8 +81,9 @@ export default function SubscribePage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError('');
     if (!transactionRef && !filePreview) {
-      alert('Veuillez renseigner le N° de transaction BaridiMob ou joindre une capture de reçu.');
+      setFormError('Veuillez renseigner le N° de transaction BaridiMob ou joindre une capture de reçu.');
       return;
     }
     setIsSubmitting(true);
@@ -173,10 +176,10 @@ export default function SubscribePage() {
 
             <div className="flex items-baseline gap-2 mb-2">
               <span className="text-4xl font-black text-[#1a2e25] dark:text-green-50">
-                {selectedPlan === 'annual' ? '4 500 DA' : '2 800 DA'}
+                {SUBSCRIPTION_PRICING[selectedPlan].formattedPrice}
               </span>
               <span className="text-sm text-gray-500">
-                / {selectedPlan === 'annual' ? 'année universitaire' : 'semestre'}
+                {SUBSCRIPTION_PRICING[selectedPlan].billingPeriod}
               </span>
             </div>
 
@@ -441,11 +444,18 @@ export default function SubscribePage() {
               </div>
             </div>
 
+            {formError && (
+              <div role="alert" className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{formError}</span>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-duo-green w-full py-4 text-base font-black shadow-md"
+              className="btn-duo-green w-full py-4 text-base font-black shadow-md cursor-pointer"
             >
               {isSubmitting ? 'Transmission en cours...' : 'Envoyer ma demande d\'activation'}
             </button>
