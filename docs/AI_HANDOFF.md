@@ -14,6 +14,12 @@ Continue building a reliable medical QCM application backed by Supabase. The own
 
 The owner authorized the authentication work and production URL setup. The stages below are a proposed continuation plan, not a claim that they are implemented. Confirm the next requested milestone with the owner if the new task does not specify one. Never infer authorization to grant admin access, delete data, or send messages to third parties.
 
+## Follow-up correction to the visible-fixes sprint
+
+The exam hub now lists real curriculum modules with search and year filters, but intentionally offers no exam launch until question banks and timer/scoring are verified. It no longer advertises fabricated official exams, question counts, or ignored count parameters. Implement stage 3 before enabling launches, including parsing and validating any future count parameter.
+
+The student PDF dialog uses native modal focus containment and Escape dismissal with focus restoration. Its fake reminder subscription was removed; document placeholders no longer show invented sizes/page counts or promise paid downloads. Practice links appear only for modules with actual questions. New navigation preserves locale, and the landing annual-price copy supports French and English. The existing quiz engine and its timer/scoring issues remain a separate outstanding stage; these UI corrections do not claim to fix that engine.
+
 ## 1. Establish the current state
 
 1. Read `AGENTS.md`, this guide, and `docs/AUTH_SETUP.md`. Read the relevant installed Next.js documentation before changing code, as AGENTS requires.

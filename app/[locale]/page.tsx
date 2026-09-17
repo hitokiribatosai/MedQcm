@@ -1,4 +1,4 @@
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Stethoscope, BookOpen, Clock, BarChart3, FileUp, ArrowRight, Star, Users, Brain } from 'lucide-react';
 import { SUBSCRIPTION_PRICING } from '@/lib/config/pricing';
@@ -54,6 +54,7 @@ const YEARS = [
 
 export default function HomePage() {
   const t = useTranslations();
+  const en = useLocale() === 'en';
 
   return (
     <main className="min-h-screen bg-surface-50 dark:bg-dark-bg">
@@ -165,7 +166,7 @@ export default function HomePage() {
           </div>
           {/* Premium tier */}
           <div className="card p-8 flex flex-col gap-4 border-2 border-primary-500 relative overflow-hidden">
-            <div className="absolute top-4 right-4 badge-free">{SUBSCRIPTION_PRICING.annual.badge}</div>
+            <div className="absolute top-4 right-4 badge-free">{en ? 'ANNUAL PLAN' : 'PASS ANNUEL'}</div>
             <h3 className="text-xl font-bold text-gradient">{t('subscribe.premium_tier')}</h3>
             <div>
               <div className="flex items-baseline gap-2">
@@ -173,11 +174,11 @@ export default function HomePage() {
                   {SUBSCRIPTION_PRICING.annual.formattedPrice}
                 </p>
                 <span className="text-sm font-bold text-gray-500 dark:text-gray-400">
-                  {SUBSCRIPTION_PRICING.annual.billingPeriod}
+                  {en ? '/ year' : SUBSCRIPTION_PRICING.annual.billingPeriod}
                 </span>
               </div>
               <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                Soit {SUBSCRIPTION_PRICING.annual.formattedEquivalent} • Sans tacite reconduction
+                {en ? 'Equivalent to 375 DA / month • Billed annually' : 'Soit 375 DA / mois • Facturé annuellement'}
               </p>
             </div>
             <p className="text-sm text-[#4b7a62] dark:text-green-400">
@@ -208,7 +209,7 @@ export default function HomePage() {
           </p>
           <div className="flex gap-4 text-sm">
             <Link href="/fr/login"    className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">Connexion</Link>
-            <Link href="/fr/register" className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">S'inscrire</Link>
+            <Link href="/fr/register" className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">S&apos;inscrire</Link>
           </div>
         </div>
       </footer>
