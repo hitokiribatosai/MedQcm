@@ -32,20 +32,31 @@ Email is read-only in the profile. Name, avatar, faculty, year and preferences p
 - Request password recovery and complete it in the initiating browser. Expired/invalid callbacks must show an error.
 - Sign out and confirm protected pages redirect to login. GET /api/auth/logout must not mutate a session; cross-origin POST must fail.
 
-Live account/email tests require a configured Supabase test project and test identities. No production accounts, roles, or settings were changed by the local implementation.
+## Live configuration — 2026-09-17
 
-## Project configuration checked on 2026-09-16
+- Repository implementation: commit `06442f2` on `main`.
+- Public website: https://qcmmed.vercel.app (French `/fr`, English `/en`).
+- Supabase project: MedQcm (`ieancvwcctvnvgbimfhs`).
+- Site URL saved and verified: `https://qcmmed.vercel.app`.
+- Five exact redirect URLs added and verified:
+  - `https://qcmmed.vercel.app/auth/callback`
+  - `https://qcmmed.vercel.app/auth/callback?locale=fr`
+  - `https://qcmmed.vercel.app/auth/callback?locale=en`
+  - `https://qcmmed.vercel.app/auth/callback?locale=fr&next=/fr/reset-password`
+  - `https://qcmmed.vercel.app/auth/callback?locale=en&next=/en/reset-password`
+- Five older Vercel redirect entries remain. Assess active deployments before removing them. Localhost callbacks were not added during this production configuration step.
+- Local `.env.local` contains the public project configuration and is ignored by Git. Verify matching variables in Vercel before deployment; never commit credentials.
+- Public Auth settings: email and signup enabled, email confirmation required, Google disabled. Minimum password length saved as 8.
+- Gmail custom SMTP enabled: sender `Medqcm.service@gmail.com`, host `smtp.gmail.com`, port 465. Credentials remain in Supabase.
 
-- Project: MedQcm (ieancvwcctvnvgbimfhs).
-- Local .env.local now contains the project URL and public publishable key; this file is ignored by Git.
-- Public Auth settings endpoint returned HTTP 200: email enabled, signup enabled, email confirmation required, Google disabled.
-- Minimum password length saved as 8 and verified in the dashboard.
-- Gmail custom SMTP configured on 2026-09-17; user confirmed Supabase displayed saved successfully, and the enabled state was verified. Sender: Medqcm.service@gmail.com; host: smtp.gmail.com; port: 465. Email delivery and recovery-flow verification remain pending. Credentials are kept in Supabase, not in the repository.
-- Existing Site URL: https://medqcm-rahal-abdelillahs-projects.vercel.app/. Main-domain selection and approval for new callback destinations are pending; no redirect URLs changed yet.
-- No users, administrator roles, database tables, or storage policies were changed.
+## Verified results and remaining checks
 
-## Email send test — 2026-09-17
+Supabase accepted a passwordless authentication email request to the owner's mailbox and the owner confirmed inbox receipt. This created a standard test account named MedQCM Email Test; no administrator role was granted. This proves mail delivery for that request, not the application's full registration or password-recovery flow.
 
-Supabase accepted a passwordless authentication email request to Medqcm.service@gmail.com through the configured SMTP service. The request allowed creation of a standard test account (MedQCM Email Test); no administrator role was granted. The user confirmed inbox receipt. This verifies request acceptance, not inbox delivery or the application callback/recovery flow.
+The public English landing and login pages returned HTTP 200. Opening the callback without a code redirected to the French login page with an authentication error, as expected. These checks do not establish the exact deployed commit or successful code exchange.
 
-The public site https://medqcm-gamma.vercel.app was verified on 2026-09-17. The previously configured main site redirects unauthenticated visitors to Vercel sign-in. Updating the main URL and callback allowlist is pending approval.
+Local type checking, production build, targeted authentication lint, and all four authentication tests passed during implementation. Repository-wide lint has existing failures outside this change.
+
+Still required: live registration/confirmation, password login/change/recovery, profile persistence and account isolation, logout, and positive/negative role checks using controlled test identities. Google login remains disabled in Supabase even though the UI offers it; hide the option or deliberately configure the provider before launch.
+
+No custom table migrations, row-level security policies, storage policies, or administrator assignments were applied in this work. Follow [AI_HANDOFF.md](AI_HANDOFF.md) for the next implementation stages.
