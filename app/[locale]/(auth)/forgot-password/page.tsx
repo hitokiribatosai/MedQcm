@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,7 @@ const forgotSchema = z.object({
 type ForgotForm = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
+  const locale = useLocale();
   const supabase = createClient();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,16 +26,18 @@ export default function ForgotPasswordPage() {
 
   async function onSubmit(data: ForgotForm) {
     setError(null);
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/fr/login?reset=success`,
-    });
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/auth/callback?locale=${locale}&next=/${locale}/reset-password`,
+      });
 
-    if (resetError) {
-      setError(resetError.message || 'Une erreur est survenue.');
-      return;
-    }
+      if (resetError) {
+        setError(resetError.message || 'Une erreur est survenue.');
+        return;
+      }
 
-    setSubmitted(true);
+      setSubmitted(true);
+    } catch { setError('Connexion impossible. Réessayez.'); }
   }
 
   return (
@@ -60,10 +64,10 @@ export default function ForgotPasswordPage() {
               </div>
               <h2 className="text-xl font-bold text-[#1a2e25] dark:text-green-50">Email envoyé !</h2>
               <p className="text-sm text-[#4b7a62] dark:text-green-300">
-                Si un compte existe pour cet email, vous recevrez un lien pour réinitialiser votre mot de passe d'ici quelques instants.
+                Si un compte existe pour cet email, vous recevrez un lien pour réinitialiser votre mot de passe d&apos;ici quelques instants.
               </p>
               <div className="pt-2">
-                <Link href="/fr/login" className="btn-primary w-full justify-center">
+                <Link href={`/${locale}/login`} className="btn-primary w-full justify-center">
                   Retour à la connexion
                 </Link>
               </div>
@@ -104,7 +108,7 @@ export default function ForgotPasswordPage() {
 
               <div className="mt-6 text-center">
                 <Link
-                  href="/fr/login"
+                  href={`/${locale}/login`}
                   className="inline-flex items-center gap-2 text-sm text-[#4b7a62] hover:text-primary-700 dark:text-green-400 dark:hover:text-primary-300 font-medium"
                 >
                   <ArrowLeft className="w-4 h-4" />

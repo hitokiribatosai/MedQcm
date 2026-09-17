@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   User, Mail, Phone, Calendar, School, Award,
-  Flame, Diamond, Heart, Shield, CheckCircle2,
-  Lock, Bell, Volume2, LogOut, Sparkles, Save, Crown
+  Flame, Diamond, CheckCircle2,
+  Lock, Bell, Volume2, LogOut, Save, Crown
 } from 'lucide-react';
-import Link from 'next/link';
+import { logout } from '@/lib/auth/logout';
+import PasswordForm from '@/components/auth/PasswordForm';
+import { useLocale } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 const ALGERIAN_FACULTIES = [
@@ -41,17 +43,18 @@ const AVATAR_OPTIONS = ['👨‍⚕️', '👩‍⚕️', '🩺', '🧠', '🫀'
 
 export default function ProfilePage() {
   const router = useRouter();
+  const locale = useLocale();
   const supabase = createClient();
 
   // Form State
   const [avatar, setAvatar] = useState('👨‍⚕️');
-  const [fullName, setFullName] = useState('Dr. Abdelilah Rahal');
-  const [email, setEmail] = useState('etudiant@medqcm.dz');
-  const [birthday, setBirthday] = useState('2002-05-14');
-  const [phone, setPhone] = useState('0555 12 34 56');
-  const [faculty, setFaculty] = useState(ALGERIAN_FACULTIES[0]);
-  const [studyYear, setStudyYear] = useState('1ere-annee');
-  const [goal, setGoal] = useState('Objectif : Major de promo & Préparation Résidanat 🎯');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthday, setBirthday] = useState('');
+  const [phone, setPhone] = useState('');
+  const [faculty, setFaculty] = useState('');
+  const [studyYear, setStudyYear] = useState('');
+  const [goal, setGoal] = useState('');
 
   // Preferences
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -61,56 +64,56 @@ export default function ProfilePage() {
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'stats' | 'security'>('info');
 
-  // Load from local storage
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
   useEffect(() => {
-    const savedProfile = localStorage.getItem('medqcm_user_profile');
-    if (savedProfile) {
+    let active = true;
+    async function load() {
       try {
-        const data = JSON.parse(savedProfile);
-        if (data.fullName) setFullName(data.fullName);
-        if (data.email) setEmail(data.email);
-        if (data.birthday) setBirthday(data.birthday);
-        if (data.phone) setPhone(data.phone);
-        if (data.faculty) setFaculty(data.faculty);
-        if (data.studyYear) setStudyYear(data.studyYear);
-        if (data.avatar) setAvatar(data.avatar);
-        if (data.goal) setGoal(data.goal);
-      } catch {}
+        const { data, error } = await supabase.auth.getUser();
+        if (!active) return;
+        if (error || !data.user) { setProfileError('Impossible de charger votre profil. Reconnectez-vous.'); return; }
+        const meta = data.user.user_metadata;
+        const text = (key: string) => typeof meta[key] === 'string' ? meta[key] : '';
+        setEmail(data.user.email ?? '');
+        setFullName(text('full_name')); setBirthday(text('birthday'));
+        setPhone(text('phone')); setFaculty(text('faculty')); setStudyYear(text('studyYear'));
+        setAvatar(text('avatar') || '👨‍⚕️'); setGoal(text('goal'));
+        setSoundEnabled(meta.soundEnabled !== false); setDailyReminders(meta.dailyReminders === true);
+      } catch { if (active) setProfileError('Impossible de charger votre profil.'); }
+      finally { if (active) setLoading(false); }
     }
-  }, []);
+    void load();
+    return () => { active = false; };
+  }, [supabase]);
 
-  // Save profile handler
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    const profileData = {
-      fullName,
-      email,
-      birthday,
-      phone,
-      faculty,
-      studyYear,
-      avatar,
-      goal,
-      soundEnabled,
-      dailyReminders,
-    };
-    localStorage.setItem('medqcm_user_profile', JSON.stringify(profileData));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3500);
+    setIsSaved(false); setProfileError(''); setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ data: {
+        full_name: fullName.trim(), birthday, phone, faculty, studyYear,
+        avatar, goal, soundEnabled, dailyReminders,
+      } });
+      if (error) { setProfileError(error.message); return; }
+      setIsSaved(true);
+      router.refresh();
+    } catch { setProfileError('Enregistrement impossible. Réessayez.'); }
+    finally { setSaving(false); }
   }
 
-  // Logout handler
   async function handleLogout() {
-    try {
-      await supabase.auth.signOut();
-    } catch {}
-    document.cookie = 'demo_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'demo_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    window.location.href = '/fr/login';
+    try { await logout(locale); }
+    catch { setProfileError('Déconnexion impossible. Réessayez.'); }
   }
+
+  if (loading) return <p role="status" className="p-8">Chargement du profil…</p>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in pb-16">
+      {profileError && <p role="alert" className="text-red-600">{profileError}</p>}
       {/* Toast Notification on Save */}
       {isSaved && (
         <div className="fixed top-20 right-6 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl border-2 border-emerald-400 animate-bounce">
@@ -239,7 +242,7 @@ export default function ProfilePage() {
               Modifier mes coordonnées
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Ces informations permettent d'adapter vos séries de QCMs et vos statistiques selon votre faculté et année.
+              Ces informations permettent d&apos;adapter vos séries de QCMs et vos statistiques selon votre faculté et année.
             </p>
           </div>
 
@@ -272,7 +275,8 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  readOnly
+                  aria-label="Adresse email du compte (lecture seule)"
                   placeholder="votre.email@medqcm.dz"
                   required
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-dark-border dark:bg-dark-muted font-semibold text-sm focus:border-emerald-500 focus:outline-hidden"
@@ -325,6 +329,7 @@ export default function ProfilePage() {
                   onChange={(e) => setFaculty(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-dark-border dark:bg-dark-muted font-semibold text-sm focus:border-emerald-500 focus:outline-hidden appearance-none"
                 >
+                  <option value="">Choisir une faculté</option>
                   {ALGERIAN_FACULTIES.map((fac) => (
                     <option key={fac} value={fac}>{fac}</option>
                   ))}
@@ -332,16 +337,17 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Année d'étude actuelle */}
+            {/* Année d&apos;étude actuelle */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                Année d'étude actuelle
+                Année d&apos;étude actuelle
               </label>
               <select
                 value={studyYear}
                 onChange={(e) => setStudyYear(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-dark-border dark:bg-dark-muted font-semibold text-sm focus:border-emerald-500 focus:outline-hidden"
               >
+                <option value="">Choisir une année</option>
                 {STUDY_YEARS.map((yr) => (
                   <option key={yr.id} value={yr.id}>{yr.label}</option>
                 ))}
@@ -366,6 +372,7 @@ export default function ProfilePage() {
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-dark-border">
             <button
+              disabled={saving || loading || !email}
               type="submit"
               className="btn-duo-green px-8 py-3.5 text-sm font-black flex items-center gap-2 cursor-pointer shadow-lg"
             >
@@ -408,7 +415,7 @@ export default function ProfilePage() {
               <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 text-center space-y-1">
                 <div className="text-3xl">🎯</div>
                 <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-300">Sans Faute</h4>
-                <p className="text-[10px] text-gray-500">100% sur un module d'Anatomie</p>
+                <p className="text-[10px] text-gray-500">100% sur un module d&apos;Anatomie</p>
               </div>
 
               <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 text-center space-y-1">
@@ -438,7 +445,7 @@ export default function ProfilePage() {
         <div className="bg-white dark:bg-dark-card rounded-3xl p-6 sm:p-8 border-2 border-gray-100 dark:border-dark-border space-y-6 animate-in">
           <div className="border-b border-gray-100 dark:border-dark-border pb-4">
             <h2 className="text-lg font-black text-[#1a2e25] dark:text-green-50">
-              Sécurité & Paramètres de l'application
+              Sécurité & Paramètres de l&apos;application
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Gérez votre mot de passe et vos préférences sonores style Duolingo.
@@ -481,31 +488,9 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Change Password Placeholder */}
-          <div className="pt-4 border-t border-gray-100 dark:border-dark-border space-y-3">
-            <h3 className="text-xs font-black text-gray-700 dark:text-gray-300">Modifier le mot de passe</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                type="password"
-                placeholder="Mot de passe actuel"
-                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-dark-border dark:bg-dark-muted text-xs font-semibold"
-              />
-              <input
-                type="password"
-                placeholder="Nouveau mot de passe"
-                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-dark-border dark:bg-dark-muted text-xs font-semibold"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsSaved(true);
-                setTimeout(() => setIsSaved(false), 3000);
-              }}
-              className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-dark-muted hover:bg-gray-200 text-xs font-bold text-gray-700 dark:text-gray-300 transition-all cursor-pointer"
-            >
-              Mettre à jour le mot de passe
-            </button>
+          <button type="button" className="btn-primary" disabled={saving || !email} onClick={handleSave}>Enregistrer les préférences</button>
+          <div className="pt-4 border-t border-gray-100 dark:border-dark-border">
+            <PasswordForm />
           </div>
         </div>
       )}

@@ -8,8 +8,9 @@ import {
   FolderArchive
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { logout } from '@/lib/auth/logout';
+import { useState } from 'react';
+import { useLocale } from 'next-intl';
 
 const navItems = [
   { href: '/fr/dashboard',  label: 'Tableau de bord', icon: LayoutDashboard },
@@ -21,18 +22,14 @@ const navItems = [
   { href: '/fr/profile',    label: 'Profil',          icon: User },
 ];
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createClient();
+  const locale = useLocale();
+  const [logoutError, setLogoutError] = useState(false);
 
   async function handleLogout() {
-    try {
-      await supabase.auth.signOut();
-    } catch {}
-    document.cookie = 'demo_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    document.cookie = 'demo_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    window.location.href = '/fr/login';
+    try { await logout(locale); }
+    catch { setLogoutError(true); }
   }
 
   return (
@@ -70,7 +67,7 @@ export default function DashboardSidebar() {
         })}
 
         {/* Admin link (visible ONLY for users with admin role) */}
-        {typeof document !== 'undefined' && document.cookie.includes('demo_role=admin') && (
+        {isAdmin && (
           <Link
             href="/fr/admin"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50 transition-all duration-200 mt-2 border-t border-primary-100 dark:border-dark-border pt-4"
@@ -81,6 +78,7 @@ export default function DashboardSidebar() {
         )}
       </nav>
 
+      {logoutError && <p role="alert" className="p-3 text-red-600">Déconnexion impossible. Réessayez.</p>}
       {/* Logout */}
       <div className="px-3 py-4 border-t border-primary-100 dark:border-dark-border">
         <button

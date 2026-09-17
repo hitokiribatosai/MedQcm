@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -18,6 +19,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const locale = useLocale();
   const supabase = createClient();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,19 +31,22 @@ export default function RegisterPage() {
 
   async function onSubmit(data: RegisterForm) {
     setError(null);
-    const { error: authError } = await supabase.auth.signUp({
-      email:    data.email,
-      password: data.password,
-      options: {
-        data: { full_name: data.fullName },
-        emailRedirectTo: `${window.location.origin}/fr/dashboard`,
-      },
-    });
-    if (authError) {
-      setError(authError.message);
-      return;
-    }
-    setSuccess(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email:    data.email,
+        password: data.password,
+        options: {
+          data: { full_name: data.fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback?locale=${locale}`,
+        },
+      });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+      if (authData.session) { router.replace(`/${locale}/dashboard`); router.refresh(); return; }
+      setSuccess(true);
+    } catch { setError('Connexion impossible. Réessayez.'); }
   }
 
   if (success) {
@@ -55,7 +60,7 @@ export default function RegisterPage() {
           <p className="text-sm text-[#4b7a62] dark:text-green-400">
             Un lien de confirmation a été envoyé à votre adresse email. Cliquez dessus pour activer votre compte.
           </p>
-          <Link href="/fr/login" className="btn-primary mt-6 inline-flex">
+          <Link href={`/${locale}/login`} className="btn-primary mt-6 inline-flex">
             Retour à la connexion
           </Link>
         </div>
@@ -75,7 +80,7 @@ export default function RegisterPage() {
             <span className="text-[#1a2e25] dark:text-green-50">Med</span>
             <span className="text-gradient">QCM</span>
           </h1>
-          <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">Rejoignez des milliers d'étudiants en médecine</p>
+          <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">Rejoignez des milliers d&apos;étudiants en médecine</p>
         </div>
 
         <div className="card p-8 animate-in">
@@ -147,7 +152,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-[#4b7a62] mt-6 dark:text-green-500">
             Déjà un compte ?{' '}
-            <Link href="/fr/login" className="text-primary-600 font-semibold hover:underline dark:text-primary-400">
+            <Link href={`/${locale}/login`} className="text-primary-600 font-semibold hover:underline dark:text-primary-400">
               Se connecter
             </Link>
           </p>
