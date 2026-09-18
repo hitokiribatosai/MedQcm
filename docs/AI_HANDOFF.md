@@ -155,3 +155,7 @@ Update this guide after each milestone and distinguish code/build checks, live d
 ### Prompt for the next AI
 
 “Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md. Verify production commit 848c405 or its successor, then execute the launch-readiness guide in order. Start with live account and quiz acceptance tests, preserving other contributors’ changes. Use owner-controlled identities; never expose secrets. Keep payments and exams disabled until their documented acceptance checks pass. Report what is verified, what requires owner content/decisions, migration/deployment steps and the next concrete milestone.”
+
+## PDF form arrangement follow-up
+
+The admin depot form now requires year/competition → module (filtered by year) → PDF file → editable suggested title → optional professor and faculty → review. Changing the year clears the module. It validates nonempty PDFs and the 25 Mo limit, restores modal focus, and adds only an explicitly labelled local draft to the selected destination. These drafts disappear on reload; no PDF is uploaded or published yet. Connect the existing fields to the real document/storage workflow in the PDF publishing milestone.

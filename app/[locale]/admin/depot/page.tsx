@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import {
   FolderArchive, UploadCloud, FileText, Plus, Trash2,
-  Download, Sparkles, BookOpen, Layers, Check, X, Search
+  Download, Sparkles, X, Search
 } from 'lucide-react';
 import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum';
 
@@ -12,12 +13,14 @@ interface DepotItem extends CoursePdf {
   yearNumber: number;
   categoryName: string;
   moduleName: string;
+  faculty?: string;
+  isDraft?: boolean;
 }
 
 const INITIAL_DEPOT: DepotItem[] = [
   {
     id: 'pdf-1',
-    moduleId: 'mod-anat-general',
+    moduleId: 'mod-y1-anat-general',
     yearNumber: 1,
     categoryName: 'Anatomie Humaine',
     moduleName: 'Anatomie Générale & Ostéologie',
@@ -30,7 +33,7 @@ const INITIAL_DEPOT: DepotItem[] = [
   },
   {
     id: 'pdf-2',
-    moduleId: 'mod-anat-general',
+    moduleId: 'mod-y1-anat-general',
     yearNumber: 1,
     categoryName: 'Anatomie Humaine',
     moduleName: 'Anatomie Générale & Ostéologie',
@@ -43,7 +46,7 @@ const INITIAL_DEPOT: DepotItem[] = [
   },
   {
     id: 'pdf-3',
-    moduleId: 'mod-hemodynamique',
+    moduleId: 'mod-y2-cardio',
     yearNumber: 2,
     categoryName: 'Physiologie Cardiovasculaire',
     moduleName: 'Cycle Cardiaque & Hémodynamique',
@@ -56,7 +59,7 @@ const INITIAL_DEPOT: DepotItem[] = [
   },
   {
     id: 'pdf-4',
-    moduleId: 'mod-syndrome-coronaire',
+    moduleId: 'mod-y4-cardio-sca',
     yearNumber: 4,
     categoryName: 'Cardiologie',
     moduleName: 'Syndromes Coronariens Aigus (SCA)',
@@ -71,10 +74,33 @@ const INITIAL_DEPOT: DepotItem[] = [
 
 export default function AdminDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);
-  const [selectedModule, setSelectedModule] = useState<string>('mod-anat-general');
+  const [selectedModule, setSelectedModule] = useState<string>(CURRICULUM_DATA[0]?.categories[0]?.modules[0]?.id || '');
   const [items, setItems] = useState<DepotItem[]>(INITIAL_DEPOT);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
+
+  const locale = useLocale();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [destinationYear, setDestinationYear] = useState('');
+  const [destinationModule, setDestinationModule] = useState('');
+  const [faculty, setFaculty] = useState('');
+  const [formError, setFormError] = useState('');
+  const [reviewing, setReviewing] = useState(false);
+  const destinationYearObj = CURRICULUM_DATA.find(y => String(y.number) === destinationYear);
+  const destinationModules = destinationYearObj?.categories.flatMap(c => c.modules.map(m => ({...m, categoryName: c.nameFr}))) || [];
+  const destination = destinationModules.find(m => m.id === destinationModule);
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const trigger = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    return () => { dialog?.close(); trigger?.focus(); };
+  }, [isModalOpen]);
+  function openForm() {
+    setDestinationYear(''); setDestinationModule(''); setPdfTitle('');
+    setProfessor(''); setFaculty(''); setUploadedFile(null);
+    setFormError(''); setReviewing(false); setIsModalOpen(true);
+  }
 
   // Form State
   const [pdfTitle, setPdfTitle] = useState('');
@@ -92,23 +118,35 @@ export default function AdminDepotPage() {
 
   function handleAddPdf(e: React.FormEvent) {
     e.preventDefault();
-    if (!pdfTitle.trim()) return;
+    if (!destinationYearObj || !destination || !pdfTitle.trim() || !uploadedFile) {
+      setFormError('Choisissez une année, un module, un fichier PDF et un titre.'); return;
+    }
+    if (!uploadedFile.name.toLowerCase().endsWith('.pdf') || uploadedFile.size > 25 * 1024 * 1024 || uploadedFile.size === 0) {
+      setFormError('Sélectionnez un PDF non vide de 25 Mo maximum.'); return;
+    }
+    setFormError('');
+    if (!reviewing) { setReviewing(true); return; }
 
     const newItem: DepotItem = {
-      id: `pdf-${Date.now()}`,
-      moduleId: selectedModule,
-      yearNumber: selectedYear,
-      categoryName: currentModuleObj?.categoryName || 'Module',
-      moduleName: currentModuleObj?.nameFr || 'Module',
-      title: pdfTitle,
-      professor: professor || 'Faculté de Médecine',
-      fileSize: uploadedFile ? `${(uploadedFile.size / (1024 * 1024)).toFixed(1)} Mo` : '3.5 Mo',
-      pagesCount: Math.floor(Math.random() * 30) + 20,
+      id: crypto.randomUUID(),
+      moduleId: destination.id,
+      yearNumber: destinationYearObj.number,
+      categoryName: destination.categoryName,
+      moduleName: destination.nameFr,
+      title: pdfTitle.trim(),
+      professor: professor.trim(),
+      faculty: faculty.trim(),
+      isDraft: true,
+      fileSize: `${(uploadedFile.size / (1024 * 1024)).toFixed(1)} Mo`,
+      pagesCount: 0,
       uploadDate: 'Aujourd\'hui',
-      isFree: currentModuleObj?.isFree ?? false,
+      isFree: destination.isFree,
     };
 
-    setItems([newItem, ...items]);
+    setItems(previous => [newItem, ...previous]);
+    setSelectedYear(destinationYearObj.number);
+    setSelectedModule(destination.id);
+    setSearch('');
     setIsModalOpen(false);
     setPdfTitle('');
     setProfessor('');
@@ -146,13 +184,13 @@ export default function AdminDepotPage() {
             Dépôt des Cours & Polycopiés PDF
           </h1>
           <p className="text-xs sm:text-sm text-[#4b7a62] dark:text-green-400 mt-1">
-            Gérez les documents de cours rattachés à chaque année et à chaque module d'étude.
+            Gérez les documents de cours rattachés à chaque année et à chaque module d&apos;étude.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={openForm}
           className="btn-duo-green self-start sm:self-auto gap-2 shadow-md text-xs sm:text-sm"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
@@ -230,11 +268,11 @@ export default function AdminDepotPage() {
               <FileText className="w-6 h-6" />
             </div>
             <p className="text-sm font-bold text-gray-500">
-              Aucun polycopié PDF n'a encore été déposé pour ce module.
+              Aucun polycopié PDF n&apos;a encore été déposé pour ce module.
             </p>
             <button
               type="button"
-              onClick={() => setIsModalOpen(true)}
+              onClick={openForm}
               className="btn-duo-green text-xs py-2 px-4 shadow-xs"
             >
               + Déposer le premier cours PDF
@@ -274,9 +312,11 @@ export default function AdminDepotPage() {
                   </div>
 
                   <div className="text-xs text-gray-400 space-y-0.5 mt-3">
-                    <p>👨‍🏫 <strong>Auteur / Prof :</strong> {pdf.professor}</p>
-                    <p>📄 <strong>Format :</strong> {pdf.pagesCount} pages • {pdf.fileSize}</p>
-                    <p>📅 <strong>Date d'ajout :</strong> {pdf.uploadDate}</p>
+                    <p>👨‍🏫 <strong>Auteur / Prof :</strong> {pdf.professor || 'Non renseigné'}</p>
+                    {pdf.faculty && <p><strong>Faculté :</strong> {pdf.faculty}</p>}
+                    {pdf.isDraft && <p className="text-amber-700 font-bold">Brouillon local — non publié, perdu après actualisation</p>}
+                    <p>📄 <strong>Format :</strong> {pdf.pagesCount ? `${pdf.pagesCount} pages • ` : ''}{pdf.fileSize}</p>
+                    <p>📅 <strong>Date d&apos;ajout :</strong> {pdf.uploadDate}</p>
                   </div>
                 </div>
 
@@ -291,7 +331,7 @@ export default function AdminDepotPage() {
 
                   {/* AI QCM Extraction Shortcut */}
                   <Link
-                    href={`/fr/admin/import?year=${pdf.yearNumber}&module=${pdf.moduleId}`}
+                    href={`/${locale}/admin/import?year=${pdf.yearNumber}&module=${pdf.moduleId}`}
                     className="btn-duo-green text-xs py-1.5 px-3 flex items-center gap-1 shadow-xs"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-200" />
@@ -306,18 +346,19 @@ export default function AdminDepotPage() {
 
       {/* Add PDF Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <dialog ref={dialogRef} onCancel={() => setIsModalOpen(false)} aria-labelledby="upload-title" className="m-auto p-0 rounded-3xl w-[calc(100%-2rem)] max-w-lg max-h-[90dvh] overflow-y-auto backdrop:bg-black/70">
           <div className="bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in">
             <div className="flex items-center justify-between">
               <div>
                 <span className="badge-free text-[10px] font-black uppercase mb-1">
                   Nouveau Polycopié
                 </span>
-                <h3 className="text-lg font-black text-[#1a2e25] dark:text-green-50">
+                <h3 id="upload-title" className="text-lg font-black text-[#1a2e25] dark:text-green-50">
                   Déposer un document de cours
                 </h3>
               </div>
               <button
+                type="button" aria-label="Fermer"
                 onClick={() => setIsModalOpen(false)}
                 className="w-8 h-8 rounded-full text-gray-400 hover:bg-gray-100 flex items-center justify-center"
               >
@@ -325,83 +366,61 @@ export default function AdminDepotPage() {
               </button>
             </div>
 
-            <form onSubmit={handleAddPdf} className="space-y-4 text-xs sm:text-sm">
-              <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1">
-                  Module de destination :
-                </label>
-                <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-dark-muted border font-bold text-xs text-emerald-800 dark:text-emerald-300">
-                  {currentYearObj?.label} → {currentModuleObj?.nameFr}
+            <p className="text-xs text-amber-700">Préparation locale uniquement : le fichier n’est pas téléversé. Le stockage et la publication seront connectés ultérieurement.</p>
+            <form onSubmit={handleAddPdf} className="space-y-4 text-sm">
+              {reviewing ? <section aria-labelledby="review-title" className="space-y-3">
+                <h4 id="review-title" className="font-bold">Vérifier le brouillon</h4>
+                <dl className="space-y-2 break-words">
+                  <div><dt className="font-bold">Destination</dt><dd>{destinationYearObj?.label} → {destination?.nameFr}</dd></div>
+                  <div><dt className="font-bold">Fichier</dt><dd>{uploadedFile?.name}</dd></div>
+                  <div><dt className="font-bold">Titre</dt><dd>{pdfTitle}</dd></div>
+                  <div><dt className="font-bold">Professeur</dt><dd>{professor || 'Non renseigné'}</dd></div>
+                  <div><dt className="font-bold">Faculté</dt><dd>{faculty || 'Non renseignée'}</dd></div>
+                </dl>
+              </section> : <>
+                <div><label htmlFor="pdf-year" className="block font-bold mb-1">1. Année / concours *</label>
+                  <select id="pdf-year" required value={destinationYear} onChange={e => {setDestinationYear(e.target.value); setDestinationModule('');}} className="input">
+                    <option value="">Choisir une année</option>
+                    {CURRICULUM_DATA.map(y => <option key={y.number} value={y.number}>{y.label}</option>)}
+                  </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1">
-                  Titre du cours / polycopié *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={pdfTitle}
-                  onChange={(e) => setPdfTitle(e.target.value)}
-                  placeholder="Ex: Polycopié Officiel — Anatomie du Thorax & Médiastin"
-                  className="input rounded-xl"
-                />
-              </div>
-
-              <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1">
-                  Enseignant / Faculté / Référence
-                </label>
-                <input
-                  type="text"
-                  value={professor}
-                  onChange={(e) => setProfessor(e.target.value)}
-                  placeholder="Ex: Pr. Benali — Faculté d'Alger"
-                  className="input rounded-xl"
-                />
-              </div>
-
-              {/* Upload Drop Area */}
-              <div>
-                <label className="block font-black text-gray-700 dark:text-gray-300 mb-1">
-                  Fichier PDF du cours *
-                </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-dark-border hover:border-emerald-500 rounded-2xl p-5 text-center transition-all bg-gray-50/50">
-                  <UploadCloud className="w-8 h-8 text-gray-400 mx-auto mb-1.5" />
-                  <p className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {uploadedFile ? uploadedFile.name : 'Sélectionnez un fichier PDF (max 25 Mo)'}
-                  </p>
-                  <label className="mt-2 inline-block text-xs font-black text-emerald-600 hover:underline cursor-pointer">
-                    Parcourir les fichiers
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
-                      className="hidden"
-                    />
-                  </label>
+                <div><label htmlFor="pdf-module" className="block font-bold mb-1">2. Module de destination *</label>
+                  <select id="pdf-module" required disabled={!destinationYear} value={destinationModule} onChange={e => setDestinationModule(e.target.value)} className="input">
+                    <option value="">Choisir un module</option>
+                    {destinationModules.map(m => <option key={m.id} value={m.id}>{m.categoryName} — {m.nameFr}</option>)}
+                  </select>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="btn-ghost text-xs"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="btn-duo-green text-xs py-2.5 px-4 shadow"
-                >
-                  Enregistrer dans le Dépôt
-                </button>
+                <div><label htmlFor="pdf-file" className="block font-bold mb-1">3. Fichier PDF * (25 Mo maximum)</label>
+                  <UploadCloud className="text-emerald-600 mb-2" />
+                  <input id="pdf-file" type="file" accept=".pdf,application/pdf" required={!uploadedFile} onChange={e => {
+                    const file = e.target.files?.[0] || null;
+                    if (file && (!file.name.toLowerCase().endsWith('.pdf') || file.size > 25 * 1024 * 1024 || !file.size)) {
+                      setUploadedFile(null); setFormError('Sélectionnez un PDF non vide de 25 Mo maximum.'); e.target.value = ''; return;
+                    }
+                    setFormError(''); setUploadedFile(file);
+                    if (file && !pdfTitle.trim()) setPdfTitle(file.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' '));
+                  }} className="block w-full" />
+                  {uploadedFile && <p className="text-xs mt-1">{uploadedFile.name}</p>}
+                </div>
+                <div><label htmlFor="pdf-title" className="block font-bold mb-1">4. Titre du document *</label>
+                  <input id="pdf-title" required maxLength={250} value={pdfTitle} onChange={e => setPdfTitle(e.target.value)} className="input" />
+                </div>
+                <div><label htmlFor="pdf-professor" className="block font-bold mb-1">5. Professeur (facultatif)</label>
+                  <input id="pdf-professor" maxLength={200} value={professor} onChange={e => setProfessor(e.target.value)} className="input" />
+                </div>
+                <div><label htmlFor="pdf-faculty" className="block font-bold mb-1">Faculté (facultatif)</label>
+                  <input id="pdf-faculty" maxLength={200} value={faculty} onChange={e => setFaculty(e.target.value)} className="input" />
+                </div>
+              </>}
+              {formError && <p role="alert" className="text-red-600">{formError}</p>}
+              <div className="flex flex-wrap justify-end gap-2 pt-3 border-t">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-ghost">Annuler</button>
+                {reviewing && <button type="button" onClick={() => setReviewing(false)} className="btn-secondary">Modifier</button>}
+                <button type="submit" className="btn-duo-green">{reviewing ? 'Ajouter le brouillon local' : '6. Vérifier le brouillon'}</button>
               </div>
             </form>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );
