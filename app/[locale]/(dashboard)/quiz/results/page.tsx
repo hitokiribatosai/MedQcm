@@ -65,7 +65,7 @@ export default async function ResultsPage({
             {en ? "History and statistics" : "Historique et statistiques"}
           </Link>
           <Link
-            href={`/${locale}/quiz/${attempt.module_id}?mode=${attempt.mode}`}
+            href={`/${locale}/quiz/${attempt.module_id}?mode=${attempt.mode}${attempt.sample_exam ? "&sample=1" : ""}`}
           >
             {en ? "Practice again" : "Recommencer"}
           </Link>

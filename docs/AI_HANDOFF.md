@@ -4,7 +4,7 @@ Updated 2026-09-18. Read AGENTS.md and installed Next.js docs before editing. Ne
 
 ## Release status — read first
 
-Production currently runs the previous PDF-arrangement release (`1abfdf3`). Recovery/payment commit `b8582f7` is tested locally. Both new migrations were applied successfully in Supabase SQL Editor with owner approval on 2026-09-18. Production deployment and new-release browser acceptance are pending. Do not confuse implementation with production availability. Apply the migrations below before deploying the new API signature.
+Recovery/payment implementation `b8582f7` and rollout documentation `4c97c25` were pushed to main. GitHub’s Vercel status for `4c97c25` reports “Deployment has completed”; the new pages are serving in production. Both new migrations were applied successfully in Supabase SQL Editor with owner approval on 2026-09-18. Do not rerun these migrations. Full owner-led account and controlled receipt acceptance remain pending.
 
 - Repository: https://github.com/hitokiribatosai/MedQcm
 - Website: https://qcmmed.vercel.app (`/fr`, `/en`).
@@ -57,7 +57,7 @@ Manual applications are not recorded in the Supabase CLI ledger. Reconcile histo
 - Current release: production webpack build, TypeScript and lint on changed functional code pass.
 - Nine auth/scoring helper tests pass; three built-server route tests pass, including forged demo access rejection, foreign-origin mutation rejection and unsigned quiz/subscription requests.
 - `tests/database/recovery-payments.mjs` uses real PostgreSQL semantics through PGlite with minimal mocked auth/storage schemas. It verifies saved draft/revision recovery, conflicting revisions, private timed keys, expiry scoring from stored answers, ownership, abandonment, closed collection, private receipt paths, server prices, admin-only approval, retry idempotence, expiry and premium quiz-start enforcement.
-- Database tests are not a replacement for real Supabase Storage uploads, production browsers or payment acceptance. Both live migration executions returned success; new-release browser verification is pending.
+- Database tests are not a replacement for real Supabase Storage uploads, production browsers or payment acceptance. Both live migrations returned success. Live verification confirmed all six draft columns, denied private-schema/core-function client access, permitted draft saves, receipt RLS, both storage policies, private bucket and closed collection. All three API/auth route tests also pass against production.
 
 Commands:
 
@@ -70,6 +70,15 @@ PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node tests/da
 ```
 
 Start the built server on the chosen local port for route tests. PGlite is a test-only package; install in a temporary directory if needed. Changed-code lint passes; broad repository lint may still have prototype baseline failures. Do not claim those were fixed.
+
+## Live rollout acceptance completed
+
+- Vercel reported success for `4c97c25`; new subscription and admin queue pages served successfully.
+- Payments show closed with 4 500 / 2 800 DA planned offers; no receipt form is exposed while closed. Admin pending queue loads with no fabricated requests.
+- Timed physiology sample `a57b45a2-6bb3-49a7-9a56-5eb8b8ac3d64` saved the selected answer. Reload restored the checked answer and continued the existing deadline. Expiry automatically finalized it at 90 seconds with 1/1 (20/20), then displayed corrections. This controlled test remains in the owner's account.
+- A rollback transaction exercised authenticated live start/save/finish RPCs successfully without retaining that extra test attempt.
+- A subsequent small fix preserves `sample=1` on the result page's restart link.
+- Still pending: owner-led signup/password flows, second real student isolation, network-failure/conflicting-tab browser scenarios, and a controlled real Storage upload/receipt review before paid launch.
 
 ## Limits and decisions
 
@@ -85,7 +94,7 @@ Start the built server on the chosen local port for route tests. PGlite is a tes
 
 ## Next steps in order
 
-1. Both new migrations are applied with explicit owner approval. Verify the live schema and permissions, publish/deploy the tested release and check actual production revision. Do not rerun migrations.
+1. Deployment and live schema checks are complete for `4c97c25`. Preserve the applied schema and continue the acceptance checks below. Do not rerun migrations.
 2. Repeat live quiz acceptance: answer, wait for “Enregistré”, refresh, resume same order/index/selection; abandon another draft. Test a timed sample through expiry, background-tab return and failed-save retry. Verify correction keys are absent while running and results/history update once. Use a second owner-controlled student account to verify result isolation.
 3. Owner-led account checklist in both locales: signup/confirmation, login, profile edit/reload, password change then login, recovery link then login, logout then protected-route rejection. Owner completes new-credential entry/submission themselves.
 4. Payment staging acceptance with two students and the authorized admin: enable test-only configuration, upload a clearly marked dummy receipt, confirm other student cannot read it, inspect admin signed proof, approve once, retry approval, test rejection and expiry. Use a staging project or explicitly approved controlled production workflow; keep real collection closed.
