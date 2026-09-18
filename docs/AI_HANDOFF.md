@@ -103,6 +103,12 @@ Start the built server on the chosen local port for route tests. PGlite is a tes
 7. Build real PDF storage, access, draft/review/published workflow and admin publishing/import/report features. Preserve year/module/title/professor/faculty fields. Owner collects permitted reviewed content.
 8. Remove unsupported marketing/gamification claims; finish mobile, keyboard/accessibility, French/English, monitoring, rate limits/email delivery, backups/restore, privacy/retention and load checks. Run an invited pilot before broad launch.
 
+## Parallel Cloudflare preview (2026-09-18)
+
+The `cloudflare-preview` branch adds OpenNext/Wrangler configuration and manual build/preview/deploy commands. Source commit `8979e87` is deployed at https://medqcm-preview.medqcm.workers.dev/fr, Worker version `0b6b708e-9331-4faa-9f01-52cdc2740e78`. Vercel and its Supabase Site URL remain unchanged. Both hosts use the same database. See `docs/CLOUDFLARE_TEST.md` for measured public-route timings and the remaining signed-in/email acceptance checklist. All three live auth/API rejection tests pass on both hosts; Cloudflare signed-in recovery/admin flows are still pending. No automatic Cloudflare Git deployment is configured.
+
+Future commercial decisions from the owner: academic subscriptions September to September; receipt contact `paymedqcm@gmail.com` with copy control requested; proposed Résidanat, all-years, semester, module-QCM and possibly own-year tiers. These are not implemented in the current preview. Confirm exact prices, academic cutoff and actual transfer destination before changing payment configuration. Keep collection closed.
+
 ## Next AI prompt
 
 “Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md. Verify actual deployed revision and whether the two recovery/payment migrations were applied before doing anything else. Complete live recovery/timed-sample tests and owner-led account acceptance. Keep payment collection closed until verified recipient/duration decisions and controlled two-student/admin receipt tests pass. Preserve existing data and contributors’ changes, never expose credentials, and report implementation separately from production verification. Then tackle reviewed content, PDF/admin publishing and launch operations.”
