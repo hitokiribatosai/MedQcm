@@ -4,7 +4,7 @@ Updated 2026-09-18. Read AGENTS.md and installed Next.js docs before editing. Ne
 
 ## Release status — read first
 
-Production currently runs the previous PDF-arrangement release (`1abfdf3`). The current recovery/payment changes are tested locally but **NOT deployed** and their new migrations are **NOT applied**. Do not confuse implementation with production availability. Apply the migrations below before deploying the new API signature.
+Production currently runs the previous PDF-arrangement release (`1abfdf3`). Recovery/payment commit `b8582f7` is tested locally. Both new migrations were applied successfully in Supabase SQL Editor with owner approval on 2026-09-18. Production deployment and new-release browser acceptance are pending. Do not confuse implementation with production availability. Apply the migrations below before deploying the new API signature.
 
 - Repository: https://github.com/hitokiribatosai/MedQcm
 - Website: https://qcmmed.vercel.app (`/fr`, `/en`).
@@ -31,7 +31,7 @@ Already applied manually in Supabase SQL Editor:
 1. `supabase/migrations/202609180001_quiz_history.sql`
 2. `supabase/migrations/202609180002_training_catalog.sql`
 
-Pending, in this order:
+Also applied successfully on 2026-09-18, in this order:
 
 3. `supabase/migrations/202609190001_session_recovery.sql`
 4. `supabase/migrations/202609190002_receipts_subscriptions.sql`
@@ -57,7 +57,7 @@ Manual applications are not recorded in the Supabase CLI ledger. Reconcile histo
 - Current release: production webpack build, TypeScript and lint on changed functional code pass.
 - Nine auth/scoring helper tests pass; three built-server route tests pass, including forged demo access rejection, foreign-origin mutation rejection and unsigned quiz/subscription requests.
 - `tests/database/recovery-payments.mjs` uses real PostgreSQL semantics through PGlite with minimal mocked auth/storage schemas. It verifies saved draft/revision recovery, conflicting revisions, private timed keys, expiry scoring from stored answers, ownership, abandonment, closed collection, private receipt paths, server prices, admin-only approval, retry idempotence, expiry and premium quiz-start enforcement.
-- Database tests are not a replacement for real Supabase Storage uploads, production browsers or payment acceptance. Full new-release live verification is pending.
+- Database tests are not a replacement for real Supabase Storage uploads, production browsers or payment acceptance. Both live migration executions returned success; new-release browser verification is pending.
 
 Commands:
 
@@ -85,7 +85,7 @@ Start the built server on the chosen local port for route tests. PGlite is a tes
 
 ## Next steps in order
 
-1. Obtain the browser-required action-time confirmation for applying the two new migrations, because they add access policies for private receipts and subscription administration. Apply and verify them, then publish/deploy the tested release and check actual production revision.
+1. Both new migrations are applied with explicit owner approval. Verify the live schema and permissions, publish/deploy the tested release and check actual production revision. Do not rerun migrations.
 2. Repeat live quiz acceptance: answer, wait for “Enregistré”, refresh, resume same order/index/selection; abandon another draft. Test a timed sample through expiry, background-tab return and failed-save retry. Verify correction keys are absent while running and results/history update once. Use a second owner-controlled student account to verify result isolation.
 3. Owner-led account checklist in both locales: signup/confirmation, login, profile edit/reload, password change then login, recovery link then login, logout then protected-route rejection. Owner completes new-credential entry/submission themselves.
 4. Payment staging acceptance with two students and the authorized admin: enable test-only configuration, upload a clearly marked dummy receipt, confirm other student cannot read it, inspect admin signed proof, approve once, retry approval, test rejection and expiry. Use a staging project or explicitly approved controlled production workflow; keep real collection closed.
