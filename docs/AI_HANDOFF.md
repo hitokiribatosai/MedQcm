@@ -1,173 +1,125 @@
-# MedQCM: continuation guide for the next AI
+# MedQCM continuation guide
 
-Last updated: 2026-09-17.
+Updated 2026-09-18. Read this status before implementing more work.
 
-## Mission and starting point
-
-Continue building a reliable medical QCM application backed by Supabase. The owner is still preparing PDFs and content; show honest empty states until reviewed content exists. Do not invent official exams, faculty approval, activity, or usage figures.
+## Current state
 
 - Repository: https://github.com/hitokiribatosai/MedQcm
-- Production: https://qcmmed.vercel.app/en (also `/fr`)
-- Supabase project: `ieancvwcctvnvgbimfhs`
-- Completed auth implementation: `06442f2` (`fix(auth): replace demo access with verified Supabase sessions`).
-- Configuration and verification details: [AUTH_SETUP.md](AUTH_SETUP.md).
+- Website: https://qcmmed.vercel.app (French `/fr`, English `/en`).
+- Supabase project: `ieancvwcctvnvgbimfhs`.
+- Authentication implementation: `06442f2`; Google button removed in `845ced6`.
+- Read `AGENTS.md` and the installed Next.js documentation before code changes. Preserve other contributors' work and never force-push.
 
-The owner authorized the authentication work and production URL setup. The stages below are a proposed continuation plan, not a claim that they are implemented. Confirm the next requested milestone with the owner if the new task does not specify one. Never infer authorization to grant admin access, delete data, or send messages to third parties.
+| Feature | Status |
+| --- | --- |
+| Email login, signup, confirmation, password recovery/change, profile metadata, logout | Implemented. SMTP delivery confirmed. Full owner-led browser acceptance testing remains. |
+| Trusted admin route protection | Implemented with `app_metadata.role`. No admin role was assigned in this work. |
+| Learning quiz engine | Replaced broken fallback flow with actual module questions, multiple selections, exact-set scoring, navigation, feedback, finalization, and retryable saves. |
+| Persistent history | Implemented and backed by Supabase; completed attempts have their own result URL and question snapshot. |
+| Statistics and activity | Implemented from completed attempts: lifetime counts, weighted accuracy, duration, paginated recent history. Dashboard summary uses the same database function. |
+| Exams | Preparation hub only. Both UI and database prevent starting unreviewed exams. Timed production exams are NOT finished. |
+| PDF depot | Native status dialog, no fake reminders. Real PDFs and publication workflow pending. |
+| Pricing | Shared annual 4 500 DA and semester 2 800 DA configuration. |
+| Payments | Not operational. Removed fabricated bank destinations and admin requests; disabled receipt form/submission. No real payment should be sent yet. |
+| Remaining admin screens, content imports, reports, gamification | Still contain prototype behavior; do not describe them as operational. |
 
-## Current fix list and implementation order
+## Database changes already applied
 
-Status reflects code through `ec500cb`. Implemented does not mean live end-to-end verified.
+With the owner's confirmation, these versioned SQL migrations were applied in Supabase on 2026-09-18:
 
-| Work item | Current status | Next action |
-| --- | --- | --- |
-| Authentication, permissions, profile, password changes | Implemented; live acceptance tests pending | Complete stage 2 with controlled identities; verify Google UI matches provider availability. |
-| Quiz engine | Outstanding — next coding priority | Complete stage 3: scoring, timer, submission, counts, unavailable modules, and results consistency. |
-| Persistent quiz history | Outstanding — follows engine | Establish schema/RLS in stage 4, then save and retrieve durable attempts in stage 5A. |
-| Live activity and statistics | Outstanding — follows history | Replace mock/session-only data with completed attempts in stage 5B. |
-| Exams hub | Route, curriculum filters, and preparation state implemented | Enable sessions only after engine verification and reviewed question availability. |
-| Student PDF alert | Replaced with a native status dialog; fake reminders removed | Keep preparation state until actual files exist; notifications require a separate real delivery feature. |
-| Landing/subscription pricing | Shared pricing implemented; annual price 4 500 DA | Preserve shared values and verify French/English presentation. |
-| Receipts and admin subscriptions | Outstanding | Implement stage 7: private uploads, pending requests, admin decisions, and server-enforced entitlement. |
-| PDF/question publishing | Outstanding; content still being prepared | Implement stage 8 when source content is available. |
+1. `supabase/migrations/202609180001_quiz_history.sql`
+2. `supabase/migrations/202609180002_training_catalog.sql`
 
-**Execution order:** establish current state → fix quiz engine → persistent data/permissions → persistent history → statistics → enable eligible exams → receipts/subscriptions → PDF publishing. Authentication acceptance remains a prerequisite for trusting live user-owned data; local engine fixes can proceed while user-led email tests are pending. Do not redo completed pricing, dialog, or hub work.
+The public schema was empty before applying them. They create:
 
-## Follow-up correction to the visible-fixes sprint
+- `training_catalog`: server-managed question snapshots, no direct student/anonymous access.
+- `training_attempts`: owner-scoped read policy, no direct student inserts/updates/deletes.
+- `start_training_attempt`: verifies the authenticated owner, validates mode/count, snapshots a randomized question set, and reuses a stable attempt ID on retries.
+- `finish_training_attempt`: locks the attempt, validates selected options, computes exact-set scores against the stored snapshot, and makes completed results immutable on repeated submissions.
+- `training_summary`: reads the current user's completed attempts under row-level security.
 
-The exam hub now lists real curriculum modules with search and year filters, but intentionally offers no exam launch until question banks and timer/scoring are verified. It no longer advertises fabricated official exams, question counts, or ignored count parameters. Implement stage 3 before enabling launches, including parsing and validating any future count parameter.
+Six existing sample questions were copied across four modules: `mod-y1-anat-general` (3), `mod-y2-cardio` (1), `mod-y3-semio-cardio` (1), `mod-y4-cardio-sca` (1). They have not been medically reviewed. All catalog rows have `exam_ready=false`. The training setup clearly labels this limitation.
 
-The student PDF dialog uses native modal focus containment and Escape dismissal with focus restoration. Its fake reminder subscription was removed; document placeholders no longer show invented sizes/page counts or promise paid downloads. Practice links appear only for modules with actual questions. New navigation preserves locale, and the landing annual-price copy supports French and English. The existing quiz engine and its timer/scoring issues remain a separate outstanding stage; these UI corrections do not claim to fix that engine.
+These migrations were applied manually through SQL Editor, not through the Supabase CLI's migration ledger. Inspect live schema before any CLI deployment and reconcile migration history; do not blindly rerun these `CREATE`/`INSERT` migrations. `db/schema.ts` is an older Drizzle scaffold and is NOT the source of truth for these tables. Do not use `drizzle push` against production until schemas are deliberately reconciled.
 
-## 1. Establish the current state
+## Implementation map
 
-1. Read `AGENTS.md`, this guide, and `docs/AUTH_SETUP.md`. Read the relevant installed Next.js documentation before changing code, as AGENTS requires.
-2. Inspect `git status`, recent commits, and remote changes; preserve other work. Do not reset the checkout or force-push.
-3. Inspect the current code before acting on the findings below; another contributor may already have fixed them.
-4. Verify Vercel points to the intended revision and public Supabase project variables. Keep `.env.local` ignored. Never put a service-role key in a browser bundle or documentation.
-5. Inspect the actual Supabase schema and policies before proposing migrations. No database or storage migrations were applied in this sprint.
+- `lib/quiz/engine.ts`: exact-set scoring, URL mode/count parsing, deadline calculation.
+- `lib/quiz/types.ts`: persisted attempt shape.
+- `app/api/quiz/route.ts`: same-origin, authenticated, validated start/finish endpoint using user-scoped Supabase RPCs. No service key is required. Same-origin validation uses the destination Host header to handle local Next.js URL normalization; logout shares the same tested helper.
+- `app/[locale]/(dashboard)/quiz/[moduleId]/page.tsx`: learning session UI and retry handling.
+- `app/[locale]/(dashboard)/quiz/results/page.tsx`: owner-checked persisted results, every selected option, unanswered counts, question snapshot review.
+- `app/[locale]/(dashboard)/stats/page.tsx`: lifetime summary and paginated activity; timestamps displayed in Africa/Algiers.
+- `app/[locale]/(dashboard)/dashboard/page.tsx`: summary connected to the same persisted data.
+- `stores/quizStore.ts`: legacy store, no longer imported by the quiz UI. Do not accidentally reconnect it; its old timer behavior is not the current implementation.
 
-## 2. Complete authentication acceptance before live data rollout
+## Current limits to preserve honestly
 
-Already implemented: verified Supabase sessions, server admin guards, real profile metadata, real password changes, confirmation/recovery callback, safer logout, removal of demo access, and basic regression tests. Do not rebuild these from scratch.
+- Active selections are held in memory. Refresh/exit abandons unsaved selections; the setup warns users and active sessions register a browser unload warning. Completed results persist across devices. Do not claim resumable drafts.
+- A failed finish keeps selections on the current page, freezes editing, and offers save retry using the same attempt ID. Do not refresh before retrying.
+- Training score is exact set = one point, otherwise zero; unanswered questions stay in the denominator. It is not an official exam grading scheme.
+- Stored session duration is server start-to-completion time, capped at 24 hours; it is not a measurement of active focus time.
+- Practice answers and explanations are available to the client. This is appropriate for learning, not a secure proctored examination.
+- Timed exam launch is gated. Deadline helper/expiry plumbing exists, but exam UI, backend deadline enforcement, hidden answer keys, and end-to-end timeout testing must be finished before unlocking it.
+- No invented streaks or weak-topic claims in statistics. Advanced charts, streak definitions and weak-topic ranking remain optional future work. Other existing curriculum/gamification pages still require an audit of prototype numbers and English translations.
+- Subscription payment flow is intentionally unavailable until verified payment details, private storage, approval and entitlement enforcement exist.
 
-Key files: `proxy.ts`, `lib/auth/policy.ts`, `lib/auth/server.ts`, `lib/auth/logout.ts`, `lib/supabase/`, `components/auth/`, `app/auth/callback/route.ts`, the profile page, and guarded layouts.
+## Next steps, in order
 
-1. Use owner-controlled test identities and the live site. Have the owner enter passwords and use their email links; never request secrets in chat.
-2. Register, receive confirmation, and complete the link in the initiating browser (PKCE needs its browser verifier). Confirm successful login and rejection of a wrong password.
-3. Save profile fields, reload, and sign in from another browser. A second account must see only its own profile.
-4. Change the password; verify mismatched confirmation fails and a fresh login accepts only the new password.
-5. Request password recovery, complete it in the initiating browser, and verify the new password. Test invalid/expired links and helpful error messages.
-6. Log out and verify protected pages redirect. Check student access to admin is denied, including forged legacy cookies and editable `user_metadata.role`.
-7. Test admin access only with an explicitly authorized trusted admin account. The only role source is `app_metadata.role`; no admin account was granted in this work.
-8. Hide the Google option while its provider is disabled, or configure Google if requested. Test both French and English paths.
+### 1. Live browser acceptance
 
-Acceptance: all flows work against the intended deployment; no demo bypass or cross-account profile exposure. Mail inbox receipt alone does not satisfy this stage.
+Use owner-controlled test accounts. Complete signup/confirmation, login, profile persistence, password change/recovery, and logout. Have the owner enter new credentials and follow email links; do not ask for secrets in chat. Check French and English routes.
 
-## 3. Correct quiz behavior before storing authoritative results
+Complete a sample anatomy session with single and multiple selections, finish, view results, refresh, visit statistics, and sign in from a second browser. Retry a failed save and verify it does not duplicate history. Test a second account cannot open the first account's result URL. Test positive admin access only with an explicitly authorized admin account.
 
-Recheck these earlier findings in the current implementation:
+### 2. Reviewed content and timed exams
 
-1. Multi-answer results may read only `selectedOptionId` instead of `selectedOptionIds`. Define and test scoring for exact matches, partial choices, unanswered questions, and single-answer questions.
-2. Timer expiry may mark the store complete without submitting. Route manual finish and expiry through one idempotent completion path (repeated calls must produce only one attempt). Include the current uncommitted selection, lock editing after completion, and prevent double-click/expiry races.
-3. Non-exam duration may use a fixed question-count estimate. Track real start/completion timestamps. In timed mode, derive remaining time from a deadline rather than assuming each interval tick equals one elapsed second. Define refresh/resume behavior explicitly and retain the same question/option order when resuming.
-4. Empty or unknown modules may fall back to unrelated questions. Show a clear unavailable/content-in-preparation state.
-5. Review mistake ordering and randomization. Do not describe simple mistake-first ordering as spaced repetition; use an unbiased shuffle where needed.
+1. Review/correct the sample medical questions and establish document/page provenance; existing source labels are inherited sample data, not verified citations.
+2. Add a small curated module through versioned catalog updates. Retain old attempt snapshots.
+3. Implement resumable drafts if desired with account-scoped ownership, stable question/option order, explicit abandonment, and reliable save states.
+4. Before enabling exams, use server deadlines, hide answer keys until completion, capture last selections, prevent expiry/manual-submit races, test background tabs/refresh, and validate requested count against available questions.
+5. Only then connect the hub's launch controls and enable reviewed catalog entries. Do not simply flip `exam_ready`.
 
-6. Parse and validate the requested mode and question count at quiz setup. Reject invalid values or show the actual supported count; never advertise more questions than exist. Keep the hub launch controls disabled until this contract works.
-7. Extract scoring into one testable function used consistently by completion and results rendering. Preserve all selected option IDs and the question version; avoid recomputing a historical result against subsequently edited questions. Document the scoring rule without calling it official unless verified.
-8. Preserve the current locale on results/exit navigation and show recoverable errors when a result cannot be saved. Separate completion from persistence status so a network retry does not restart the quiz.
+### 3. Payments and subscriptions
 
-Start with `stores/quizStore.ts`, `app/[locale]/(dashboard)/quiz/[moduleId]/page.tsx`, and `app/[locale]/(dashboard)/quiz/results/page.tsx`.
+1. Obtain owner-verified payment recipient details; never restore the sample RIP/CCP numbers.
+2. Add private receipt storage, file validation, ownership policies and authorized admin viewing.
+3. Create pending requests with server-validated plan amounts and stable retry IDs.
+4. Implement an authenticated admin queue and atomic, idempotent approval/rejection with an audit trail.
+5. Store expiry/entitlements and enforce access at data operations; do not trust client flags or editable profile metadata.
+6. Test two students and an authorized admin before enabling the payment UI.
 
-Acceptance: tests cover single/multiple answers, unanswered questions, invalid counts, empty modules, background/expired timers, duplicate finish calls, and consistent result rendering. Expiry completes once, elapsed time is credible, and unavailable modules never serve unrelated content.
+### 4. PDF publishing and remaining prototypes
 
-## 4. Establish persistent data and permissions
+Replace simulated imports/saves and local-only reports with real records. Add draft/review/published states, extraction/OCR jobs where needed, provenance, errors/retries, and medically reviewed questions. Add notifications only when subscriptions and actual delivery exist. Audit remaining admin dashboard figures, learning-map progress, landing marketing claims, mobile/accessibility and translations.
 
-1. Inventory the existing Drizzle schema, current Supabase tables, and frontend types. Choose one versioned migration workflow rather than applying competing schema systems.
-2. Resolve curriculum slug IDs versus database UUIDs explicitly. Model attempts, answers, multiple selections, start/completion timestamps, and stable attempt IDs.
-3. Add foreign keys, constraints, and indexes suited to actual queries. Define server-side score calculation before accepting client submissions as authoritative.
-4. Apply least-privilege row-level security: students access their own attempts and payment requests; privileged operations require trusted admin authorization at the operation itself.
-5. Prevent answer-key exposure where exam rules require it. Do not assume a protected page protects its underlying API.
-6. Test policies as two separate students and an authorized admin, including direct API requests. Keep privileged server credentials server-only.
+## Validation and evidence
 
-Acceptance: migrations are reviewable and repeatable; cross-account reads/writes fail; users cannot forge paid status, roles, or scores. Do not blindly run destructive schema synchronization on live data.
+- TypeScript and targeted lint for the new quiz code.
+- Five engine tests: multi-selection, unanswered denominator, deadline catch-up, invalid/clamped counts, nonmutating shuffle.
+- Four auth policy/origin tests and two local route regression tests.
+- Isolated PostgreSQL (PGlite) migration tests: catalog seed, retry identity, exact scoring, immutable finish, owner isolation, denied direct writes, private catalog, disabled exams and anonymous denial.
+- Live Supabase transaction verified a 3/3 anatomy result, immutable retry, and cross-account read denial; all test changes were rolled back. This was database verification, not a browser login simulation.
+- Production build uses `npx next build --webpack` here because Turbopack workers hit a local port permission restriction.
 
-## 5. Connect persistent history, then statistics
-
-### 5A. Persistent history
-
-1. After stage 4, add an authenticated server operation that accepts a stable attempt ID and selected answers. Resolve the owner from the verified session; validate module/question membership and calculate the score server-side.
-2. Write the attempt and answers atomically with a uniqueness rule for retries. Store mode, question version/order, all selected option IDs, total/answered/correct counts, timestamps, duration, and completion status. Finalized attempts must not be freely editable by students.
-3. Replace single-attempt session storage as the source of truth. Local state can support an in-progress draft or retry, but must be scoped to the authenticated account and must never silently import another user's or anonymous history.
-4. Load the results page by attempt ID and provide a paginated history query restricted to the current user. Handle loading, empty, missing, forbidden, and failed-save states explicitly.
-5. Test refresh, a second device/browser, sign-out/account switching, network failure followed by retry, and attempted access to another student's attempt.
-
-Acceptance: a completed quiz survives refresh and another browser; retries produce one record; partial writes and cross-account reads/writes fail; unsaved results are clearly identified.
-
-### 5B. Live activity and statistics
-
-1. Read completed attempts from the history API/database rather than hardcoded data or the latest session-storage entry. Update/invalidate queries after a successful completion.
-2. Define each metric before implementing it: accuracy denominator, total completed questions, elapsed study time, streak timezone/day boundary, and weak-module ranking with a minimum evidence threshold. Exclude abandoned attempts consistently.
-3. Populate the recent activity timeline with module names, completion dates, mode and score. Use stable ordering and pagination or a bounded recent list.
-4. Derive charts and summary cards from the same data source. New users see zeros and helpful empty states, never fabricated activity.
-5. Use fixed test histories to verify aggregates, repeated attempts, unanswered questions, date boundaries, and empty histories. Verify a newly finished quiz updates the timeline and summary without requiring logout.
-
-Acceptance: displayed metrics agree with stored completed attempts, persist across devices, update after completion, and remain isolated by user.
-
-## 6. Complete visible student-facing fixes
-
-1. Preserve the implemented `/[locale]/exams` preparation hub and filters. Attach the timed simulator only after stage 3 and reviewed question availability. Use an official countdown only when a verified date exists.
-2. Preserve the implemented native PDF status dialog and absence of fake reminders. Say the document is being prepared unless faculty validation is actually established.
-3. Preserve the implemented shared pricing source in `lib/config/pricing.ts`. The requested annual price is **4 500 DA / an**; confirm other plans before changing their amounts. Synchronize landing and subscription pages.
-4. Check French/English navigation, keyboard interaction, mobile layout, loading/error states, and unsupported marketing figures.
-
-Acceptance: no dead primary navigation, fake download success, blank pricing, or fabricated availability.
-
-## 7. Connect receipts and subscriptions end to end
-
-1. Store receipts in a private bucket with ownership policies, upload size/type validation, and controlled admin viewing.
-2. Create a user-owned pending payment record using server-validated plan and amount. Show submission failures and prevent duplicate requests.
-3. Read real pending records in the admin subscriptions queue.
-4. Make approval/rejection authorized, atomic, and idempotent. Record who acted and when, and define subscription start/expiry behavior.
-5. Enforce subscription access server-side. Never trust client state or editable user metadata as proof of payment.
-
-Acceptance: a student's receipt reaches the admin queue; authorized approval grants the correct entitlement once; other students cannot retrieve the receipt or approve payments.
-
-## 8. Add the PDF and question publishing workflow
-
-1. Replace simulated import/save actions with durable storage and processing state.
-2. Add extraction/OCR only as needed, with retryable jobs and clear failures.
-3. Preserve source document, page references, and content versions. Separate draft questions from published questions.
-4. Require human review of medical questions and explanations before publication; store corrections and user reports.
-5. Pilot one module with a small reviewed question set before expanding the catalog.
-
-Acceptance: only reviewed content appears to students, provenance is available, and failed imports do not create partially published material.
-
-## 9. Validate and deliver each milestone
-
-Run checks proportionate to the changes:
+Commands:
 
 ```sh
-node --experimental-strip-types --test tests/auth-policy.test.mjs
+node --experimental-strip-types --test tests/auth-policy.test.mjs tests/quiz-engine.test.mjs
 npx tsc --noEmit
-npm run build
+npx next build --webpack
 ```
 
-With a separate local built server at port 3100 and test configuration:
+Database test requires `@electric-sql/pglite` installed in an isolated directory (no production connection):
 
 ```sh
-TEST_APP_URL=http://localhost:3100 node --experimental-strip-types --test tests/*.test.mjs
+PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node tests/database/quiz.mjs
 ```
 
-The route test includes logout requests; run it against a local test instance. Inspect the tests before changing their target. Use Node 22.6+ for the strip-types command.
+For route tests, use a separate local built server only:
 
-- Run targeted lint and meaningful new tests for the behavior changed. Repository-wide lint already has unrelated failures; document them rather than disabling checks globally.
-- Check the diff for secrets and unrelated edits. Use small coherent commits and ordinary pushes within the owner's requested scope.
-- Record migration/deployment steps and verify the deployed behavior on the actual public URL.
-- Update this guide with what passed, what remains, and the next concrete action. Distinguish local tests, live read-only checks, and live authenticated tests.
+```sh
+TEST_APP_URL=http://localhost:3100 node --experimental-strip-types --test tests/auth-routes.test.mjs
+```
 
-The corrective UI commit passed TypeScript, targeted lint, three authentication policy tests, and `npx next build --webpack`. Default Turbopack builds hit a local worker/port permission restriction; this was not a verified application compile failure. Validate the deployment separately.
-
-## Suggested next prompt
-
-“Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md in MedQcm. Start with stage 3: fix and test the quiz engine. Then implement stage 4 and stage 5 in order: persistent data and permissions, durable user-owned history, and live statistics. Preserve completed UI/auth work and other contributors’ changes. Keep exams in preparation until the engine and reviewed question banks are ready. Never expose credentials. Report tests, migrations, outstanding live authentication checks, and deployment status after each milestone.”
+Update this guide after each milestone and distinguish code/build checks, live database verification, deployed checks, and authenticated browser testing. Do not claim every item is finished because the build passes.

@@ -18,3 +18,8 @@ test('production routes reject forged demo access and unsafe auth requests', { s
   assert.ok(html.includes('Lien invalide'));
   assert.ok(!html.includes('Admin (test)'));
 });
+
+test('quiz API rejects cross-origin and unauthenticated requests', { skip: !origin }, async () => {
+  assert.equal((await fetch(origin + '/api/quiz', {method:'POST',headers:{origin:'https://evil.test','content-type':'application/json'},body:'{}'})).status,403);
+  assert.equal((await fetch(origin + '/api/quiz', {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status,401);
+});

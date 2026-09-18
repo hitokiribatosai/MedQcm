@@ -1,8 +1,9 @@
+import { isSameOrigin } from '@/lib/auth/origin';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
-  if (request.headers.get('origin') !== new URL(request.url).origin) {
+  if (!isSameOrigin(request)) {
     return NextResponse.json({ error: 'Origin not allowed' }, { status: 403 });
   }
   const supabase = await createClient();

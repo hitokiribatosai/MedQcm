@@ -1,9 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import {
-  Flame, Zap, Trophy, Target, ArrowRight, Star,
-  BookOpen, Clock, Sparkles, CheckCircle2, ChevronRight
-} from 'lucide-react';
+import {Flame, Zap, ArrowRight, ChevronRight} from 'lucide-react';
 
 const YEARS = [
   { number: 1, label: '1ère Année Médecine', color: 'from-emerald-500 to-emerald-700', modules: 12, free: true, xp: 450 },
@@ -16,7 +13,8 @@ const YEARS = [
   { number: 8, label: 'Concours Résidanat', color: 'from-amber-500 to-orange-600', modules: 35, free: false, special: true, xp: 2500 },
 ];
 
-export default async function DuolingoDashboardPage() {
+export default async function DuolingoDashboardPage({params}: {params: Promise<{locale: string}>}) {
+  const {locale} = await params;
   const supabase = await createClient();
   let user = null;
   try {
@@ -26,7 +24,12 @@ export default async function DuolingoDashboardPage() {
     user = null;
   }
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] ?? 'Étudiant';
+  const { data: summary, error: summaryError } = await supabase.rpc('training_summary');
+  const totalQuestions = Number(summary?.questions ?? 0);
+  const accuracy = totalQuestions ? Math.round(Number(summary?.correct ?? 0) * 100 / totalQuestions) : 0;
+
+  const fullName = user?.user_metadata?.full_name;
+  const firstName = typeof fullName === 'string' ? fullName.split(' ')[0] : 'Étudiant';
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20">
@@ -36,7 +39,7 @@ export default async function DuolingoDashboardPage() {
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-emerald-100 text-xs font-black uppercase tracking-wider backdrop-blur-sm">
               <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400" />
-              <span>Série de 5 jours • Tu es en feu !</span>
+              <span>Entraînements enregistrés dans votre compte</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
               Prêt pour ta dose de QCMs, {firstName} ?
@@ -48,7 +51,7 @@ export default async function DuolingoDashboardPage() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <Link
-              href="/fr/years/1"
+              href={`/${locale}/years/1`}
               className="btn-duo-gold py-4 px-6 text-sm shadow-lg flex items-center justify-center gap-2"
             >
               <Zap className="w-4 h-4 fill-white text-white" />
@@ -58,80 +61,12 @@ export default async function DuolingoDashboardPage() {
         </div>
       </div>
 
-      {/* ── Gamification Widgets (Quête du jour + Ligue) ─────────────── */}
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Quête du jour */}
-        <div className="card p-5 border-2 border-b-4 border-gray-200 dark:border-dark-border rounded-2xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-400">
-              Quête du Jour 🎯
-            </span>
-            <span className="text-xs font-black text-amber-500 flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 fill-amber-500" /> +30 XP
-            </span>
-          </div>
-
-          <p className="text-sm font-bold text-[#1a2e25] dark:text-green-50 mb-3">
-            Répondre à 10 QCMs d'Anatomie
-          </p>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs font-bold text-gray-500">
-              <span>Progression</span>
-              <span>6 / 10</span>
-            </div>
-            <div className="w-full h-3 bg-gray-100 dark:bg-dark-muted rounded-full overflow-hidden p-0.5">
-              <div className="h-full bg-emerald-500 rounded-full w-[60%]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Ligue Médicale */}
-        <div className="card p-5 border-2 border-b-4 border-gray-200 dark:border-dark-border rounded-2xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-400">
-              Ligue Médicale 🏆
-            </span>
-            <span className="text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-md">
-              Zone de promotion
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 flex items-center justify-center font-black">
-              #4
-            </div>
-            <div>
-              <p className="text-sm font-bold text-[#1a2e25] dark:text-green-50">Ligue Interne</p>
-              <p className="text-xs text-gray-400">380 XP cette semaine</p>
-            </div>
-          </div>
-
-          <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            Top 5 qualifié pour la Ligue Résident !
-          </span>
-        </div>
-
-        {/* Précision Globale */}
-        <div className="card p-5 border-2 border-b-4 border-gray-200 dark:border-dark-border rounded-2xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-black uppercase tracking-wider text-gray-400">
-              Précision Clinique 🩺
-            </span>
-            <span className="text-xs font-black text-sky-600 bg-sky-50 dark:bg-sky-950 px-2 py-0.5 rounded-md">
-              Niveau 3
-            </span>
-          </div>
-
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-3xl font-black text-[#1a2e25] dark:text-green-50">84%</span>
-            <span className="text-xs text-emerald-600 font-bold">Excellent réflexe</span>
-          </div>
-
-          <p className="text-xs text-gray-400">
-            Basé sur vos 85 dernières réponses validées
-          </p>
-        </div>
+        {summaryError ? <p role="alert">Statistiques temporairement indisponibles.</p> : <>
+          <div className="card p-5"><p>Sessions terminées</p><strong className="text-3xl">{Number(summary?.sessions ?? 0)}</strong></div>
+          <div className="card p-5"><p>Questions terminées</p><strong className="text-3xl">{totalQuestions}</strong></div>
+          <div className="card p-5"><p>Réussite globale</p><strong className="text-3xl">{accuracy}%</strong></div>
+        </>}
       </div>
 
       {/* ── Winding Years Hub ────────────────────────────────────────── */}
@@ -139,14 +74,14 @@ export default async function DuolingoDashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black text-[#1a2e25] dark:text-green-50">
-              Choisissez votre parcours d'études
+              Choisissez votre parcours d&apos;études
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Chaque année comprend son propre parcours en serpentin avec modules et boss d'examens
+              Chaque année comprend son propre parcours en serpentin avec modules et boss d&apos;examens
             </p>
           </div>
 
-          <Link href="/fr/years" className="text-xs font-black text-emerald-600 hover:underline flex items-center gap-1">
+          <Link href={`/${locale}/years`} className="text-xs font-black text-emerald-600 hover:underline flex items-center gap-1">
             Voir tous les parcours <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -156,7 +91,7 @@ export default async function DuolingoDashboardPage() {
           {YEARS.map((y) => (
             <Link
               key={y.number}
-              href={`/fr/years/${y.number}`}
+              href={`/${locale}/years/${y.number}`}
               className={`p-5 rounded-2xl border-2 border-b-4 bg-white dark:bg-dark-card transition-all hover:scale-[1.02] active:scale-[0.98] group flex flex-col justify-between ${
                 y.special
                   ? 'border-amber-400 border-b-amber-600 shadow-md'

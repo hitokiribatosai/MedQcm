@@ -1,11 +1,7 @@
 'use client';
-
 import { useState } from 'react';
-import {
-  CreditCard, CheckCircle2, XCircle, Clock, Eye,
-  Search, Filter, ShieldCheck, Mail, Copy, Check,
-  ExternalLink, X, AlertCircle
-} from 'lucide-react';
+
+import {CheckCircle2, XCircle, Clock, Eye, Search, Mail, Copy, Check, ExternalLink, X} from 'lucide-react';
 
 interface SubRequest {
   id: string;
@@ -22,62 +18,8 @@ interface SubRequest {
   notes?: string;
 }
 
-const INITIAL_REQUESTS: SubRequest[] = [
-  {
-    id: 'req-1',
-    studentName: 'Dr. Yasmine Benali',
-    email: 'yasmine.benali@univ-med.dz',
-    phone: '0550 12 34 56',
-    plan: 'Annuel',
-    amount: '4 500 DA',
-    method: 'BaridiMob',
-    transactionRef: 'TRX-893214',
-    date: 'Aujourd\'hui à 09:42',
-    proofUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=800',
-    status: 'pending',
-    notes: 'Reçu envoyé par BaridiMob vers medqcmpay@gmail.com',
-  },
-  {
-    id: 'req-2',
-    studentName: 'Karim Mansouri',
-    email: 'k.mansouri@gmail.com',
-    phone: '0770 98 76 54',
-    plan: 'Annuel',
-    amount: '4 500 DA',
-    method: 'BaridiMob',
-    transactionRef: 'TRX-045129',
-    date: 'Hier à 16:15',
-    proofUrl: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=800',
-    status: 'pending',
-    notes: 'Avis officiel reçu par mail',
-  },
-  {
-    id: 'req-3',
-    studentName: 'Amine Larbi',
-    email: 'amine.larbi98@gmail.com',
-    phone: '0661 22 33 44',
-    plan: 'Semestriel',
-    amount: '2 800 DA',
-    method: 'BaridiMob',
-    transactionRef: 'TRX-551920',
-    date: '10 Sept. 2026',
-    status: 'approved',
-    notes: 'Vérifié dans medqcmpay@gmail.com - Activé',
-  },
-  {
-    id: 'req-4',
-    studentName: 'Nadia Cherif',
-    email: 'nadia.med@outlook.fr',
-    phone: '0541 77 88 99',
-    plan: 'Annuel',
-    amount: '4 500 DA',
-    method: 'CCP',
-    transactionRef: 'CCP-09812',
-    date: '08 Sept. 2026',
-    status: 'rejected',
-    notes: 'Montant insuffisant ou référence introuvable',
-  }
-];
+// No fabricated payment requests. The real queue is a separate pending milestone.
+const INITIAL_REQUESTS: SubRequest[] = [];
 
 export default function AdminSubscriptionsPage() {
   const [requests, setRequests] = useState<SubRequest[]>(INITIAL_REQUESTS);
@@ -122,6 +64,7 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-8 pb-16">
+      <p role="status" className="card p-4">La collecte et la validation des reçus ne sont pas encore connectées. Aucune demande réelle n’est traitée ici.</p>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -441,7 +384,7 @@ export default function AdminSubscriptionsPage() {
                 className="btn-duo-green text-xs py-2 px-4 shadow"
               >
                 <CheckCircle2 className="w-4 h-4 mr-1" />
-                Valider & Activer l'accès (1 an)
+                Valider & Activer l&apos;accès (1 an)
               </button>
             </div>
           </div>

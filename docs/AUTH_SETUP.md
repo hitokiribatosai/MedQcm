@@ -57,6 +57,6 @@ The public English landing and login pages returned HTTP 200. Opening the callba
 
 Local type checking, production build, targeted authentication lint, and all four authentication tests passed during implementation. Repository-wide lint has existing failures outside this change.
 
-Still required: live registration/confirmation, password login/change/recovery, profile persistence and account isolation, logout, and positive/negative role checks using controlled test identities. Google login remains disabled in Supabase even though the UI offers it; hide the option or deliberately configure the provider before launch.
+Still required: live registration/confirmation, password login/change/recovery, profile persistence and account isolation, logout, and positive/negative role checks using controlled test identities. Google login remains disabled in Supabase; the UI option was removed in commit `845ced6`.
 
-No custom table migrations, row-level security policies, storage policies, or administrator assignments were applied in this work. Follow [AI_HANDOFF.md](AI_HANDOFF.md) for the next implementation stages.
+On 2026-09-18, the quiz-history tables, owner-scoped read policy, server-scored RPCs and six-question training catalog were applied. See AI_HANDOFF.md for migration details. No payment/storage policies or administrator assignments were applied. Follow [AI_HANDOFF.md](AI_HANDOFF.md) for the next implementation stages.

@@ -1,10 +1,7 @@
 'use client';
-
 import { useState } from 'react';
-import {
-  Check, ShieldCheck, UploadCloud, AlertCircle, Clock,
-  CreditCard, Phone, FileCheck, ArrowRight, Sparkles, Copy, Mail, CheckCircle2
-} from 'lucide-react';
+
+import {Check, ShieldCheck, UploadCloud, AlertCircle, Clock, CreditCard, Phone, FileCheck, ArrowRight, Sparkles, Copy, Mail} from 'lucide-react';
 import { SUBSCRIPTION_PRICING } from '@/lib/config/pricing';
 
 interface PaymentDetail {
@@ -20,33 +17,8 @@ interface PaymentMethod {
   details: PaymentDetail[];
 }
 
-const PAYMENT_METHODS: PaymentMethod[] = [
-  {
-    title: 'BaridiMob (Recommandé)',
-    badge: 'Reçu direct par e-mail',
-    details: [
-      { label: 'Numéro RIP', value: '00799999000123456789', copyable: true },
-      { label: 'Nom du titulaire', value: 'Dr. MedQCM / Rahal' },
-      { label: 'E-mail officiel pour le reçu BaridiMob', value: 'medqcmpay@gmail.com', copyable: true, highlight: true },
-    ],
-  },
-  {
-    title: 'CCP (Poste Algérie)',
-    badge: 'Bordereau guichet',
-    details: [
-      { label: 'Numéro CCP', value: '12345678 Clé 99', copyable: true },
-      { label: 'Titulaire', value: 'Service MedQCM' },
-    ],
-  },
-  {
-    title: 'Virement bancaire',
-    badge: 'Banques nationales',
-    details: [
-      { label: 'RIB / IBAN', value: '002 00012 1234567890 55', copyable: true },
-      { label: 'Banque', value: 'Banque Nationale / BEA' },
-    ],
-  },
-];
+// Payment destinations must be verified before enabling receipt collection.
+const PAYMENT_METHODS: PaymentMethod[] = [];
 
 export default function SubscribePage() {
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'semester'>('annual');
@@ -55,10 +27,9 @@ export default function SubscribePage() {
   const [username, setUsername] = useState('');
   const [transactionRef, setTransactionRef] = useState('');
   const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
-  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'pending' | 'active'>('idle');
+  const [submissionStatus] = useState<'idle' | 'pending' | 'active'>('idle');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   function copyToClipboard(text: string, key: string) {
@@ -86,11 +57,7 @@ export default function SubscribePage() {
       setFormError('Veuillez renseigner le N° de transaction BaridiMob ou joindre une capture de reçu.');
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionStatus('pending');
-    }, 800);
+    setFormError('Les paiements ne sont pas encore ouverts. Aucune demande n’a été envoyée.');
   }
 
   return (
@@ -101,7 +68,7 @@ export default function SubscribePage() {
           Abonnement MedQCM
         </span>
         <h1 className="text-3xl sm:text-4xl font-black text-[#1a2e25] dark:text-green-50 tracking-tight">
-          Débloquez l'Intégralité du Programme
+          Débloquez l&apos;Intégralité du Programme
         </h1>
         <p className="text-base text-[#4b7a62] dark:text-green-400 max-w-2xl mx-auto">
           Le 1er module de chaque année est 100% gratuit. Accédez à tous les modules des 7 années + Résidanat pour réussir vos épreuves.
@@ -119,7 +86,7 @@ export default function SubscribePage() {
               Demande reçue — En attente de validation
             </h3>
             <p className="text-sm text-amber-800/90 dark:text-amber-300/80 mt-1">
-              Votre demande pour le compte <strong>{username || 'utilisateur'}</strong> (Réf: {transactionRef || 'En attente'}) est transmise à l'administrateur. Notre équipe vérifiera la réception de l'avis BaridiMob sur <code className="font-bold">medqcmpay@gmail.com</code> et activera votre compte rapidement.
+              Votre demande pour le compte <strong>{username || 'utilisateur'}</strong> (Réf: {transactionRef || 'En attente'}) est transmise à l&apos;administrateur. Notre équipe vérifiera la réception de l&apos;avis BaridiMob sur <code className="font-bold">medqcmpay@gmail.com</code> et activera votre compte rapidement.
             </p>
           </div>
         </div>
@@ -135,7 +102,7 @@ export default function SubscribePage() {
               <span className="badge-free">Inclus</span>
             </div>
             <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50 mb-2">0 DA</div>
-            <p className="text-xs text-[#4b7a62] dark:text-green-400 mb-6">Testez l'interface et la qualité de la banque de questions</p>
+            <p className="text-xs text-[#4b7a62] dark:text-green-400 mb-6">Testez l&apos;interface et la qualité de la banque de questions</p>
 
             <ul className="space-y-3 text-sm text-[#2d523f] dark:text-green-200">
               <li className="flex items-center gap-2.5 font-medium">
@@ -150,7 +117,7 @@ export default function SubscribePage() {
                 <span>Accès aux modules cliniques avancés</span>
               </li>
               <li className="flex items-center gap-2.5 text-gray-400 line-through">
-                <span>Simulations d'examens blancs classés</span>
+                <span>Simulations d&apos;examens blancs classés</span>
               </li>
             </ul>
           </div>
@@ -215,22 +182,22 @@ export default function SubscribePage() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0 stroke-[3]" />
-                <span>+15 000 QCMs réactualisés avec explications théoriques</span>
+                <span>Banque de questions en préparation</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0 stroke-[3]" />
-                <span>Examens blancs chronométrés & classement live</span>
+                <span>Examens blancs en préparation</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0 stroke-[3]" />
-                <span>Synchronisation multi-supports (Web, iOS, Android)</span>
+                <span>Historique des entraînements enregistré sur le Web</span>
               </li>
             </ul>
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-100 dark:border-dark-border">
             <a href="#payment-section" className="btn-duo-green w-full py-3 text-sm shadow">
-              Obtenir l'accès complet <ArrowRight className="w-4 h-4 ml-1" />
+              Paiements en préparation <ArrowRight className="w-4 h-4 ml-1" />
             </a>
           </div>
         </div>
@@ -244,7 +211,7 @@ export default function SubscribePage() {
             Coordonnées de paiement & Activation
           </h2>
           <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">
-            Effectuez votre transfert, envoyez le reçu BaridiMob à notre e-mail dédié, puis saisissez votre référence ci-dessous.
+            Paiements en préparation : n’effectuez aucun transfert. Le formulaire et la validation des reçus ne sont pas encore connectés.
           </p>
         </div>
 
@@ -322,7 +289,7 @@ export default function SubscribePage() {
                 Astuce BaridiMob : Reçu officiel certifié par e-mail
               </h4>
               <p className="text-xs text-emerald-900/80 dark:text-emerald-300 leading-relaxed max-w-xl">
-                Dans votre application <strong>BaridiMob</strong>, cochez l'option <strong>« Envoyer le reçu par e-mail »</strong> et collez l'adresse officielle ci-contre. Votre avis d'opération officiel nous parviendra directement !
+                Dans votre application <strong>BaridiMob</strong>, cochez l&apos;option <strong>« Envoyer le reçu par e-mail »</strong> et collez l&apos;adresse officielle ci-contre. Votre avis d&apos;opération officiel nous parviendra directement !
               </p>
             </div>
           </div>
@@ -353,7 +320,7 @@ export default function SubscribePage() {
               <FileCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#1a2e25] dark:text-green-50">Formulaire d'activation rapide</h3>
+              <h3 className="text-lg font-black text-[#1a2e25] dark:text-green-50">Formulaire d&apos;activation rapide</h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Renseignez votre compte pour activer votre accès annuel
               </p>
@@ -361,10 +328,11 @@ export default function SubscribePage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <fieldset disabled className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-[#1a2e25] dark:text-green-100 mb-1.5">
-                  Nom d'utilisateur / Email du compte MedQCM *
+                  Nom d&apos;utilisateur / Email du compte MedQCM *
                 </label>
                 <input
                   type="text"
@@ -423,7 +391,7 @@ export default function SubscribePage() {
                     />
                     <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{fileName}</p>
                     <label className="text-xs text-emerald-600 hover:underline cursor-pointer font-bold">
-                      Changer d'image
+                      Changer d&apos;image
                       <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="hidden" />
                     </label>
                   </div>
@@ -454,7 +422,7 @@ export default function SubscribePage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={true}
               className="btn-duo-green w-full py-4 text-base font-black shadow-md cursor-pointer"
             >
               {isSubmitting ? 'Transmission en cours...' : 'Envoyer ma demande d\'activation'}
@@ -464,6 +432,7 @@ export default function SubscribePage() {
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Vérification avec le reçu reçu sur medqcmpay@gmail.com sous 2 à 24h</span>
             </div>
+          </fieldset>
           </form>
         </div>
       </div>

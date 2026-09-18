@@ -22,3 +22,11 @@ test('protected routes match complete path segments', () => {
   assert.equal(localeFromPath('/en/profile'), 'en');
   assert.equal(localeFromPath('/english'), 'fr');
 });
+
+// Local reverse-proxy URL normalization must not reject the real browser origin.
+test('same-origin validation preserves host/port and rejects foreign or null origins', async () => {
+  const { isSameOrigin } = await import('../lib/auth/origin.ts');
+  const request = origin => new Request('http://localhost:3100/api/quiz', {headers:{host:'127.0.0.1:3100',origin}});
+  assert.equal(isSameOrigin(request('http://127.0.0.1:3100')), true);
+  for (const origin of ['null','https://evil.example','http://127.0.0.1:3101','http://127.0.0.1:3100/path']) assert.equal(isSameOrigin(request(origin)),false);
+});
