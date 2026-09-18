@@ -2,6 +2,10 @@
 
 Updated 2026-09-18. Read this status before implementing more work.
 
+## Production rollout
+
+The owner explicitly approved deployment of commit `848c405`. It was pushed to `main` on 2026-09-18. Verify that Vercel's production deployment uses this revision; a Git push alone does not prove deployment completion. The database migrations were already applied and verified before the push.
+
 ## Current state
 
 - Repository: https://github.com/hitokiribatosai/MedQcm
@@ -123,3 +127,31 @@ TEST_APP_URL=http://localhost:3100 node --experimental-strip-types --test tests/
 ```
 
 Update this guide after each milestone and distinguish code/build checks, live database verification, deployed checks, and authenticated browser testing. Do not claim every item is finished because the build passes.
+
+## Launch-readiness guide
+
+“100% ready” means the agreed launch scope has passed its acceptance checks. Any unfinished feature must be disabled and described honestly. Use the following sequence, with one reviewable milestone per step.
+
+1. **Verify production and account flows.** Confirm the Vercel production revision, public URL and Supabase environment variables. Use two owner-controlled students and an explicitly authorized admin to test registration/confirmation, wrong-password rejection, login/logout, profile persistence, password change/recovery, protected routes and cross-account result access. Complete and reload a quiz, check lifetime statistics, and repeat from another device. Record evidence; have the owner enter credentials and follow recovery links.
+2. **Publish reviewed launch content.** Decide which modules are included at launch. Review medical correctness, document copyright/permission, question source/page provenance, explanations and answer sets. Remove unverified sample-source claims. Replace sample data with a small curated bank first. Unavailable modules remain clearly unavailable. Acceptance: every offered module has reviewed, versioned content, and old result snapshots remain valid.
+3. **Finish the learning experience.** Decide whether refresh/resume support is required for launch. If yes, add account-owned draft persistence and stable question order, with explicit resume/abandon behavior. Add accessible feedback, network-error recovery, completion retry and optional real question reports. Acceptance: interrupted sessions and retries have predictable behavior; no lost selections are represented as saved.
+4. **Finish timed exams if included.** Implement a server-authoritative deadline, answer-key hiding until completion, auto-finalization, current-selection capture, duplicate-submit handling, realistic question counts and reviewed exam grading. Test expiry, manual-submit races, background tabs, disconnects and refresh. Only enable exam-ready catalog rows after these checks. Acceptance: all promised exam rules hold under direct API calls as well as the UI.
+5. **Build payments if launching paid access.** Obtain verified recipient details and plan duration rules from the owner. Implement private validated receipt uploads, pending requests, authorized admin review, atomic/idempotent decisions, audit fields and expiry-based entitlements. Enforce access at every protected content/API operation. Acceptance: a real controlled receipt reaches the queue, an authorized decision changes entitlement once, and students cannot view others' receipts or approve themselves. Keep payment collection disabled until then.
+6. **Finish PDF and admin publishing.** Add real document storage/access policies, draft/review/published states, extraction/OCR jobs only where needed, durable progress/errors, question provenance and human review. Wire reports and corrections to a real admin queue. Replace simulated imports, local-only saves and fabricated dashboard records. Acceptance: only published content reaches students, and failures do not partially publish data.
+7. **Audit all product promises.** Check landing claims, module counts, progress maps, subscription features, rankings, notification promises and English/French translations against actual functionality. Implement each promise or remove it. Check mobile layout, keyboard-only navigation, labels, focus, readable contrast, loading/error/empty states and navigation in both locales. Native/mobile apps must not be advertised as ready unless actually shipped and tested.
+8. **Prepare operations.** Reconcile the manually applied migration history with the chosen deployment workflow; keep secrets out of Git and browser bundles. Review least-privilege grants and storage policies. Set up error monitoring with redaction, uptime checks, email deliverability/rate-limit handling, backup/restore procedures appropriate to the selected Supabase plan, and a documented rollback procedure. Define support and data-retention/account-deletion workflows. Test recovery in a safe environment.
+9. **Release validation.** Run type/build/lint checks and meaningful unit, database-policy and browser tests covering the agreed scope. Review remaining dependency advisories and baseline lint failures. Test expected load using a staging environment and realistic dataset before choosing capacity. Confirm owner-approved privacy/terms, payment/refund information where applicable, and content rights. Run a small invited pilot, fix reported blockers, then open registration more broadly.
+
+### Definition of ready
+
+- All enabled student and admin flows pass on the actual production revision.
+- Published medical content is reviewed and provenance/rights are established.
+- Scores, history and statistics are durable, consistent and isolated by account.
+- Payments and exams are either fully tested or visibly unavailable.
+- No fabricated usage, progress, payment status or delivery promises remain.
+- Mobile/accessibility/localization checks pass for the launch scope.
+- Monitoring, backups, rollback and support responsibilities are documented and tested.
+
+### Prompt for the next AI
+
+“Read AGENTS.md, docs/AUTH_SETUP.md and docs/AI_HANDOFF.md. Verify production commit 848c405 or its successor, then execute the launch-readiness guide in order. Start with live account and quiz acceptance tests, preserving other contributors’ changes. Use owner-controlled identities; never expose secrets. Keep payments and exams disabled until their documented acceptance checks pass. Report what is verified, what requires owner content/decisions, migration/deployment steps and the next concrete milestone.”
