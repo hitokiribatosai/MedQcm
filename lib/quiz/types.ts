@@ -1,5 +1,11 @@
 import type { Mode, Question } from "./engine";
 export type Attempt = {
+  deadline_at: string | null;
+  draft_answers: Record<string, string[]>;
+  draft_index: number;
+  draft_revision: number;
+  abandoned_at: string | null;
+  sample_exam: boolean;
   id: string;
   user_id: string;
   module_id: string;

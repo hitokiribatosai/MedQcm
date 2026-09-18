@@ -7,7 +7,7 @@ import {
   FolderArchive, UploadCloud, FileText, Plus, Trash2,
   Download, Sparkles, X, Search
 } from 'lucide-react';
-import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum';
+import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum-metadata';
 
 interface DepotItem extends CoursePdf {
   yearNumber: number;

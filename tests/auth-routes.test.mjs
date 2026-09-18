@@ -23,3 +23,10 @@ test('quiz API rejects cross-origin and unauthenticated requests', { skip: !orig
   assert.equal((await fetch(origin + '/api/quiz', {method:'POST',headers:{origin:'https://evil.test','content-type':'application/json'},body:'{}'})).status,403);
   assert.equal((await fetch(origin + '/api/quiz', {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status,401);
 });
+
+
+test('subscription API rejects foreign origins and unsigned callers', { skip: !origin }, async () => {
+  assert.equal((await fetch(origin + '/api/subscriptions')).status,401);
+  assert.equal((await fetch(origin + '/api/subscriptions', {method:'POST',headers:{origin:'https://evil.test','content-type':'application/json'},body:'{}'})).status,403);
+  assert.equal((await fetch(origin + '/api/subscriptions', {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status,401);
+});

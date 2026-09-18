@@ -8,7 +8,7 @@ import {
   Sparkles, ArrowRight,
   Clock
 } from 'lucide-react';
-import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum';
+import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum-metadata';
 
 export default function StudentDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);

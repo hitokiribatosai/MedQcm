@@ -5,7 +5,7 @@ import {
   UploadCloud, FileText, Sparkles, CheckCircle2,
   AlertCircle, ArrowRight, BookOpen, Layers, Check, Loader2
 } from 'lucide-react';
-import { CURRICULUM_DATA } from '@/lib/data/curriculum';
+import { CURRICULUM_DATA } from '@/lib/data/curriculum-metadata';
 
 interface ParsedQuestion {
   questionText: string;

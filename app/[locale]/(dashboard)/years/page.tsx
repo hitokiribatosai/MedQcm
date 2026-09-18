@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CURRICULUM_DATA } from '@/lib/data/curriculum';
+import { CURRICULUM_DATA } from '@/lib/data/curriculum-metadata';
 import { BookOpen, Star, ArrowRight, CheckCircle2, Lock, Sparkles } from 'lucide-react';
 
 export default function YearsIndexPage() {

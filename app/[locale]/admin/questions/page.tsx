@@ -5,7 +5,7 @@ import {
   HelpCircle, Plus, Trash2, Edit3, Search, Filter,
   CheckCircle2, XCircle, AlertCircle, X, Sparkles, BookOpen
 } from 'lucide-react';
-import { CURRICULUM_DATA, QuestionData } from '@/lib/data/curriculum';
+import { CURRICULUM_DATA, QuestionData } from '@/lib/data/curriculum-metadata';
 
 export default function AdminQuestionsPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);

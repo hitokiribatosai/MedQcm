@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getYearData, ModuleData } from '@/lib/data/curriculum';
+import { getYearData, ModuleData } from '@/lib/data/curriculum-metadata';
 import {
   ArrowLeft, Star, Lock, Play, Sparkles, CheckCircle2,
   Trophy, Gift, Zap, Compass, ChevronRight, X, Heart
