@@ -44,6 +44,10 @@ export default function RegisterPage() {
         setError(authError.message);
         return;
       }
+      if (authData.user && authData.user.identities?.length === 0) {
+        setError(locale === 'en' ? 'Email already registered.' : 'Cette adresse email est déjà utilisée.');
+        return;
+      }
       if (authData.session) { router.replace(`/${locale}/dashboard`); router.refresh(); return; }
       setSuccess(true);
     } catch { setError('Connexion impossible. Réessayez.'); }
