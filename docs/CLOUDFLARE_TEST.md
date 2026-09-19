@@ -1,8 +1,8 @@
 # Parallel Cloudflare test deployment
 
-Status (2026-09-18): deployed from `cloudflare-preview`, source commit `8979e87`, Worker version `0b6b708e-9331-4faa-9f01-52cdc2740e78`. Live preview: https://medqcm-preview.medqcm.workers.dev/fr . Vercel remains live at https://qcmmed.vercel.app . OpenNext 1.20.6 / Wrangler 4.135.0 build succeeded with Next.js 16.3.5. All three auth/API protection tests passed on both live hosts and on the local Workers runtime. Approximately 1.82 MiB compressed Worker bundle. Node.js proxy support is experimental in this adapter, so signed-in acceptance remains essential.
+Status (2026-09-19): deployed from `cloudflare-preview` as Worker `app`, version `501f2f00-13d0-4876-9a75-3ffa291c0764`. Current Cloudflare address: https://app.medqcm.workers.dev/fr . The older `medqcm-preview` Worker remains available temporarily for rollback. Vercel remains live at https://qcmmed.vercel.app . OpenNext 1.20.6 / Wrangler 4.135.0 build succeeded with Next.js 16.3.5. All three auth/API protection tests passed on both live hosts and on the local Workers runtime. Approximately 1.82 MiB compressed Worker bundle. Node.js proxy support is experimental in this adapter, so signed-in acceptance remains essential.
 
-The Cloudflare French landing page was visibly verified in the browser. Public FR/EN landing and login routes returned 200; signed-out exams redirected (307), subscriptions API rejected unsigned access (401). No owner-led Cloudflare login, quiz recovery, admin acceptance or email callback test has been completed yet. Deployment is manual; pushing the branch alone does not redeploy Cloudflare.
+The new Cloudflare French landing page was visibly verified in the browser. Public FR/EN landing and login routes returned 200; signed-out exams redirected (307), subscriptions API rejected unsigned access (401), and all three live access-protection tests passed. No owner-led Cloudflare login, quiz recovery, admin acceptance or email callback test has been completed yet. Add exact `app.medqcm.workers.dev` callbacks to Supabase before confirmation/recovery testing. Deployment is manual; pushing the branch alone does not redeploy Cloudflare.
 
 ## Initial comparison
 
@@ -10,15 +10,15 @@ Three sequential response-header measurements per route from this workstation, m
 
 | Route | Vercel | Cloudflare |
 | --- | ---: | ---: |
-| /fr | 351 | 174 |
-| /en | 253 | 180 |
-| /fr/login | 238 | 308 |
-| /fr/exams (signed out) | 193 | 188 |
-| /api/subscriptions (signed out) | 256 | 313 |
+| /fr | 343 | 86 |
+| /en | 231 | 77 |
+| /fr/login | 245 | 81 |
+| /fr/exams (signed out) | 112 | 51 |
+| /api/subscriptions (signed out) | 193 | 51 |
 
 Results are mixed and the sample is small. This does not establish a winner, capacity, or student experience in Algeria. Compare authenticated requests and repeat from representative networks before selecting a host. Asset upload required two network retries, then the Worker deployed successfully. Keep both deployments for testing.
 
-Vercel remains the established deployment. Cloudflare uses a separate Worker named `medqcm-preview`. Both use the existing Supabase project; account/quiz changes on either host affect the same database. No new database migration is needed. Use only owner-controlled test identities. Keep collection closed.
+Vercel remains the established deployment. Cloudflare uses a separate Worker named `app`; `medqcm-preview` is retained only for rollback during acceptance. Both use the existing Supabase project; account/quiz changes on either host affect the same database. No new database migration is needed. Use only owner-controlled test identities. Keep collection closed.
 
 ## Commands
 

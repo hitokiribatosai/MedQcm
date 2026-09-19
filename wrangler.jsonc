@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "medqcm-preview",
+  "name": "app",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-18",
   "compatibility_flags": [
