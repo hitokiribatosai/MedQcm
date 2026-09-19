@@ -17,60 +17,7 @@ interface DepotItem extends CoursePdf {
   isDraft?: boolean;
 }
 
-const INITIAL_DEPOT: DepotItem[] = [
-  {
-    id: 'pdf-1',
-    moduleId: 'mod-y1-anat-general',
-    yearNumber: 1,
-    categoryName: 'Anatomie Humaine',
-    moduleName: 'Anatomie Générale & Ostéologie',
-    title: 'Polycopié Officiel — Ostéologie Générale & Repères Cardinaux',
-    professor: 'Pr. Benali / Faculté de Médecine',
-    fileSize: '4.8 Mo',
-    pagesCount: 42,
-    uploadDate: '05 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-2',
-    moduleId: 'mod-y1-anat-general',
-    yearNumber: 1,
-    categoryName: 'Anatomie Humaine',
-    moduleName: 'Anatomie Générale & Ostéologie',
-    title: 'Fiche Synthèse — Articulations & Loges du Membre Supérieur',
-    professor: 'Collège National d\'Anatomie',
-    fileSize: '2.1 Mo',
-    pagesCount: 16,
-    uploadDate: '01 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-3',
-    moduleId: 'mod-y2-cardio',
-    yearNumber: 2,
-    categoryName: 'Physiologie Cardiovasculaire',
-    moduleName: 'Cycle Cardiaque & Hémodynamique',
-    title: 'Support Magistral — Régulation Hémodynamique & Bruits du Cœur',
-    professor: 'Dr. Mansouri / CHU Alger',
-    fileSize: '6.3 Mo',
-    pagesCount: 54,
-    uploadDate: '10 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-4',
-    moduleId: 'mod-y4-cardio-sca',
-    yearNumber: 4,
-    categoryName: 'Cardiologie',
-    moduleName: 'Syndromes Coronariens Aigus (SCA)',
-    title: 'Guide Pratique — Prise en Charge des SCA ST+ et ST- (Recommandations ESC)',
-    professor: 'Collège des Enseignants de Cardiologie',
-    fileSize: '8.5 Mo',
-    pagesCount: 68,
-    uploadDate: '12 Sept. 2026',
-    isFree: false,
-  }
-];
+const INITIAL_DEPOT: DepotItem[] = [];
 
 export default function AdminDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);

@@ -96,18 +96,7 @@ export default function StudentDepotPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cat.modules.map((mod) => {
-                const docs: CoursePdf[] = mod.documents || [
-                  {
-                    id: `${mod.id}-pdf-1`,
-                    moduleId: mod.id,
-                    title: `Polycopié — ${mod.nameFr}`,
-                    professor: '',
-                    fileSize: '',
-                    pagesCount: 0,
-                    uploadDate: '',
-                    isFree: mod.isFree,
-                  }
-                ];
+                const docs: CoursePdf[] = mod.documents || [];
 
                 const filteredDocs = docs.filter((d) =>
                   !search ||
@@ -139,7 +128,11 @@ export default function StudentDepotPage() {
                       </div>
 
                       <div className="space-y-3">
-                        {filteredDocs.map((doc) => (
+                        {filteredDocs.length === 0 ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {en ? 'No document has been published for this module.' : 'Aucun document n’a été publié pour ce module.'}
+                          </p>
+                        ) : filteredDocs.map((doc) => (
                           <div
                             key={doc.id}
                             className="p-3.5 rounded-xl bg-gray-50 dark:bg-dark-muted border flex items-start justify-between gap-3"
@@ -163,7 +156,7 @@ export default function StudentDepotPage() {
                     </div>
 
                     <div className="mt-5 pt-3 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
-                      <button
+                      {filteredDocs.length > 0 && <button
                           type="button"
                           onClick={() => {
                             setSelectedDoc({
@@ -176,7 +169,7 @@ export default function StudentDepotPage() {
                         >
                           <Download className="w-3.5 h-3.5" />
                           {en ? 'Document status' : 'État du document'}
-                        </button>
+                        </button>}
 
 
                       {!!mod.questions?.length && <Link

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   User, Mail, Phone, Calendar, School, Award,
-  Flame, Diamond, CheckCircle2,
-  Lock, Bell, Volume2, LogOut, Save, Crown
+  CheckCircle2,
+  Lock, Bell, Volume2, LogOut, Save
 } from 'lucide-react';
 import { logout } from '@/lib/auth/logout';
 import PasswordForm from '@/components/auth/PasswordForm';
@@ -165,19 +165,11 @@ export default function ProfilePage() {
               « {goal} »
             </p>
 
-            {/* Quick Duolingo HUD Chips */}
+            {/* Account status */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
-              <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 text-xs font-extrabold dark:bg-orange-950/30 dark:border-orange-800">
-                <Flame className="w-3.5 h-3.5 fill-orange-500" />
-                <span>5 Jours Série</span>
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-sky-50 border border-sky-200 text-sky-600 text-xs font-extrabold dark:bg-sky-950/30 dark:border-sky-800">
-                <Diamond className="w-3.5 h-3.5 fill-sky-500" />
-                <span>420 Gemmes</span>
-              </div>
-              <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-extrabold dark:bg-amber-950/30 dark:border-amber-800">
-                <Crown className="w-3.5 h-3.5 text-amber-500" />
-                <span>Pass Pro Actif</span>
+              <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-extrabold dark:bg-emerald-950/30 dark:border-emerald-800">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Profil synchronisé</span>
               </div>
             </div>
           </div>

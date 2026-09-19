@@ -1,12 +1,38 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  CreditCard, HelpCircle, Users, TrendingUp,
-  Clock, ArrowRight, UploadCloud, Shield, CheckCircle2
+  CreditCard, HelpCircle, Users,
+  Clock, ArrowRight, UploadCloud
 } from 'lucide-react';
 
 export default function AdminOverviewPage() {
+  const [pendingPayments, setPendingPayments] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/subscriptions', { cache: 'no-store' })
+      .then(async response => {
+        if (!response.ok) throw new Error('Subscriptions unavailable');
+        return response.json() as Promise<{ requests?: unknown[] }>;
+      })
+      .then(data => {
+        if (active) setPendingPayments(data.requests?.length ?? 0);
+      })
+      .catch(() => {
+        if (active) setPendingPayments(null);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const pendingLabel = pendingPayments === null ? '…' : String(pendingPayments);
+  const pendingDescription = pendingPayments === null
+    ? 'Chargement des demandes en attente…'
+    : pendingPayments === 0
+      ? 'Aucun reçu en attente de validation'
+      : `${pendingPayments} reçu${pendingPayments > 1 ? 's' : ''} en attente de validation manuelle`;
+
   return (
     <div className="space-y-8 pb-16">
       {/* Header */}
@@ -33,7 +59,7 @@ export default function AdminOverviewPage() {
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">2</div>
+          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">{pendingLabel}</div>
           <Link href="/fr/admin/subscriptions" className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline mt-2 inline-flex items-center gap-1">
             Traiter les reçus →
           </Link>
@@ -48,8 +74,8 @@ export default function AdminOverviewPage() {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">1 420</div>
-          <span className="text-[11px] text-emerald-600 font-semibold">+18% ce mois</span>
+          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">—</div>
+          <span className="text-[11px] text-gray-500 font-semibold">Donnée non connectée</span>
         </div>
 
         <div className="card p-5 border border-primary-100 dark:border-dark-border">
@@ -61,8 +87,8 @@ export default function AdminOverviewPage() {
               <HelpCircle className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">15 480</div>
-          <span className="text-[11px] text-[#4b7a62] dark:text-green-400">7 années + Résidanat</span>
+          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">—</div>
+          <span className="text-[11px] text-[#4b7a62] dark:text-green-400">Donnée non connectée</span>
         </div>
 
         <div className="card p-5 border border-primary-100 dark:border-dark-border">
@@ -74,8 +100,8 @@ export default function AdminOverviewPage() {
               <CreditCard className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">894</div>
-          <span className="text-[11px] text-accent-700 dark:text-accent-400 font-semibold">Taux rétention 92%</span>
+          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">—</div>
+          <span className="text-[11px] text-gray-500 font-semibold">Donnée non connectée</span>
         </div>
       </div>
 
@@ -92,7 +118,7 @@ export default function AdminOverviewPage() {
             Activer les abonnements
           </h3>
           <p className="text-xs text-[#4b7a62] dark:text-green-400 mt-1">
-            2 reçus d'étudiants en attente de validation manuelle
+            {pendingDescription}
           </p>
           <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 mt-4">
             Gérer les demandes <ArrowRight className="w-3.5 h-3.5" />

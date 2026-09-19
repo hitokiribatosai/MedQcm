@@ -29,30 +29,6 @@ export const CURRICULUM_DATA: YearData[] = [
               "Généralités sur le squelette, articulations, plans anatomiques et repères osseux cardinaux.",
             questionCount: 45,
             isFree: true,
-            documents: [
-              {
-                id: "pdf-anat-1",
-                moduleId: "mod-y1-anat-general",
-                title:
-                  "Polycopié Officiel — Ostéologie Générale & Repères Cardinaux",
-                professor: "Pr. Benali / Faculté de Médecine",
-                fileSize: "4.8 Mo",
-                pagesCount: 42,
-                uploadDate: "05 Sept. 2026",
-                isFree: true,
-              },
-              {
-                id: "pdf-anat-2",
-                moduleId: "mod-y1-anat-general",
-                title:
-                  "Fiche Synthèse — Articulations & Loges du Membre Supérieur",
-                professor: "Collège National d'Anatomie",
-                fileSize: "2.1 Mo",
-                pagesCount: 16,
-                uploadDate: "01 Sept. 2026",
-                isFree: true,
-              },
-            ],
             availableQuestionCount: 3,
           },
           {
