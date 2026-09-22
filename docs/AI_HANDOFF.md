@@ -1,6 +1,6 @@
 # MedQCM continuation guide
 
-Updated 2026-09-18. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
+Updated 2026-09-19. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
 
 ## Release status — read first
 
@@ -16,13 +16,13 @@ Recovery/payment implementation `b8582f7` and rollout documentation `4c97c25` we
 
 | Area | Status |
 | --- | --- |
-| Accounts | Email registration, confirmation, login, recovery/password change, profile metadata and logout implemented. Full owner-led production credential acceptance remains. |
+| Accounts | Email registration, confirmation, login, duplicate-address feedback, recovery/password change, profile metadata and logout implemented. Cloudflare signup/login passed; the final real reset-link/password/login exchange remains. |
 | Quiz/history/stats | Six sample questions across four modules, exact-set multi-select scoring, immutable completed snapshots/results, durable history and account-scoped statistics. |
 | Recovery (new release) | Server-saved answers and current question, stable ordering, unfinished-session resume/abandon, optimistic revisions to reject conflicting tabs, serialized autosaves and save-failure warning/retry. |
 | Timed samples (new release) | 90 seconds/question, database deadline, running answer keys private, last persisted draft scored after expiry, repeated completion safe. Clearly labeled unreviewed samples. |
 | Payments (new release) | Private receipts, pending queue, trusted admin review, audited atomic/idempotent approval, expiry entitlements and server-side premium quiz start checks. Collection remains closed. |
-| PDFs | Year → filtered module → file → title → optional professor/faculty → review. Local drafts only; no publishing or persistent document uploads. |
-| Other admin/marketing | Prototype imports/questions/reports, simulated dashboard features and unsupported claims still need work. Do not call them operational. |
+| PDFs | Year → filtered module → file → title → optional professor/faculty → review. Local drafts only; no publishing or persistent document uploads. Fabricated document entries were removed; both live views truthfully show no published PDFs. |
+| Other admin/marketing | Real pending-payment count is connected. Imports/questions/reports and the remaining nonpayment KPIs are not operational; unconnected KPIs display a dash instead of invented totals. |
 
 ## Database rollout
 
@@ -78,7 +78,9 @@ Start the built server on the chosen local port for route tests. PGlite is a tes
 - Timed physiology sample `a57b45a2-6bb3-49a7-9a56-5eb8b8ac3d64` saved the selected answer. Reload restored the checked answer and continued the existing deadline. Expiry automatically finalized it at 90 seconds with 1/1 (20/20), then displayed corrections. This controlled test remains in the owner's account.
 - A rollback transaction exercised authenticated live start/save/finish RPCs successfully without retaining that extra test attempt.
 - A subsequent small fix preserves `sample=1` on the result page's restart link.
-- Still pending: owner-led signup/password flows, second real student isolation, network-failure/conflicting-tab browser scenarios, and a controlled real Storage upload/receipt review before paid launch.
+- Cloudflare acceptance on 2026-09-19: new student signup/login passed. Practice attempt `77ad30b6-6935-4084-8fe3-309e3a456077` saved, restored after refresh, completed at 1/3 (6.7/20), and appeared in history/statistics. Student admin denial and authorized admin access passed. The real admin queue returned zero while collection stayed closed. Duplicate signup feedback is explicit. Reset-email request succeeded, but the real reset-link/password/login exchange remains pending.
+- Cloudflare timed sample on 2026-09-22: attempt `3a593946-76db-4370-b31f-7b435626b4e3` saved the correct answer, restored it after refresh with the same countdown, then automatically finalized at 90 seconds with 1/1 (20/20). It remains in the admin account.
+- Still pending: final password-recovery exchange, second simultaneous student isolation, network-failure/conflicting-tab browser scenarios, and a controlled real Storage upload/receipt review before paid launch.
 
 ## Limits and decisions
 
@@ -103,9 +105,9 @@ Start the built server on the chosen local port for route tests. PGlite is a tes
 7. Build real PDF storage, access, draft/review/published workflow and admin publishing/import/report features. Preserve year/module/title/professor/faculty fields. Owner collects permitted reviewed content.
 8. Remove unsupported marketing/gamification claims; finish mobile, keyboard/accessibility, French/English, monitoring, rate limits/email delivery, backups/restore, privacy/retention and load checks. Run an invited pilot before broad launch.
 
-## Parallel Cloudflare preview (2026-09-18)
+## Parallel Cloudflare preview (2026-09-19)
 
-The `cloudflare-preview` branch adds OpenNext/Wrangler configuration and manual build/preview/deploy commands. Worker `app`, version `501f2f00-13d0-4876-9a75-3ffa291c0764`, is deployed at https://app.medqcm.workers.dev/fr. The older `medqcm-preview` Worker is retained temporarily for rollback. Vercel and its Supabase Site URL remain unchanged. Both hosts use the same database. See `docs/CLOUDFLARE_TEST.md` for measured public-route timings and the remaining signed-in/email acceptance checklist. All three live auth/API rejection tests pass on both hosts; Cloudflare signed-in recovery/admin flows and exact Supabase callback allowlisting are still pending. No automatic Cloudflare Git deployment is configured.
+The `cloudflare-preview` branch adds OpenNext/Wrangler configuration and manual build/preview/deploy commands. Worker `app`, version `a46ab195-ca5b-4506-b18d-73f0c6a676bf`, is deployed at https://app.medqcm.workers.dev/fr. The older `medqcm-preview` Worker is retained temporarily for rollback. Vercel and its Supabase Site URL remain unchanged. Both hosts use the same database. Exact Cloudflare callbacks are allowlisted. Student signup/login, saved quiz recovery/completion/history, admin isolation/access and the real empty payment queue passed in the browser. Full recovery-link completion and a controlled receipt review remain pending. No automatic Cloudflare Git deployment is configured.
 
 Future commercial decisions from the owner: academic subscriptions September to September; receipt contact `paymedqcm@gmail.com` with copy control requested; proposed Résidanat, all-years, semester, module-QCM and possibly own-year tiers. These are not implemented in the current preview. Confirm exact prices, academic cutoff and actual transfer destination before changing payment configuration. Keep collection closed.
 
