@@ -1,6 +1,6 @@
 # Parallel Cloudflare test deployment
 
-Status (2026-09-19): deployed from `cloudflare-preview` as Worker `app`, version `a46ab195-ca5b-4506-b18d-73f0c6a676bf`. Current Cloudflare address: https://app.medqcm.workers.dev/fr . The older `medqcm-preview` Worker remains available temporarily for rollback. Vercel remains live at https://qcmmed.vercel.app . OpenNext 1.20.6 / Wrangler 4.135.0 build succeeded with Next.js 16.3.5. All three auth/API protection tests passed on both live hosts and on the local Workers runtime. Approximately 1.82 MiB compressed Worker bundle. Node.js proxy support is experimental in this adapter, so signed-in acceptance remains essential.
+Status (2026-09-19): deployed from `cloudflare-preview` as Worker `app`, version `88426636-2dcf-4a58-abac-ac34e6b9394b`. Current Cloudflare address: https://app.medqcm.workers.dev/fr . The older `medqcm-preview` Worker remains available temporarily for rollback. Vercel remains live at https://qcmmed.vercel.app . OpenNext 1.20.6 / Wrangler 4.135.0 build succeeded with Next.js 16.3.5. All three auth/API protection tests passed on both live hosts and on the local Workers runtime. Approximately 1.82 MiB compressed Worker bundle. Node.js proxy support is experimental in this adapter, so signed-in acceptance remains essential.
 
 The Cloudflare French landing page was visibly verified in the browser. Public FR/EN landing and login routes returned 200; signed-out exams redirected (307), subscriptions API rejected unsigned access (401), and all three live access-protection tests passed. Exact French/English signup and recovery callback URLs for `app.medqcm.workers.dev` are allowlisted in Supabase while every Vercel URL and the Vercel Site URL remain preserved. Deployment is manual; pushing the branch alone does not redeploy Cloudflare.
 
@@ -8,7 +8,7 @@ Signed-in browser acceptance also passed: a new student account registered and l
 
 On 2026-09-22, timed sample `3a593946-76db-4370-b31f-7b435626b4e3` saved one selected answer, recovered it after refresh without resetting the deadline, and automatically finalized at 90 seconds. The result showed 1/1 (20/20), one 90-second session, and account persistence. This controlled attempt remains in the admin account.
 
-Acceptance uncovered and removed simulated dashboard totals, fabricated pending receipts, placeholder PDFs, and the profile's fictional Pass Pro/streak/gems. The live admin overview now reads the real pending queue, and both document views truthfully report no published PDFs. Admin question management, reports, PDF persistence and AI extraction remain prototypes.
+Acceptance uncovered and removed simulated dashboard totals, fabricated pending receipts, placeholder PDFs, and fictional Pass Pro/streak/gems/lives/achievements from the account UI. The live admin overview now reads the real pending queue, the profile links to account-scoped statistics, and both document views truthfully report no published PDFs. Admin question management, reports, PDF persistence and AI extraction remain prototypes.
 
 ## Initial comparison
 
