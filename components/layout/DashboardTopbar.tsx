@@ -1,33 +1,19 @@
 'use client';
 
 import type { User } from '@supabase/supabase-js';
-import { Moon, Sun, Flame, Diamond, Heart, Sparkles, BookOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Moon, Sun, BookOpen } from 'lucide-react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function DashboardTopbar({ user }: { user: User }) {
-  const [darkMode, setDarkMode] = useState(false);
-
   useEffect(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark');
-      setDarkMode(true);
-    } else {
-      document.documentElement.classList.remove('dark');
-      setDarkMode(false);
-    }
+    document.documentElement.classList.toggle('dark', saved === 'dark');
   }, []);
 
   function toggleDark() {
-    if (darkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    }
-    setDarkMode(!darkMode);
+    const dark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
   }
 
   const initials = user?.user_metadata?.full_name
@@ -53,45 +39,19 @@ export default function DashboardTopbar({ user }: { user: User }) {
         </span>
       </div>
 
-      {/* Center/Right: Duolingo Gamification HUD */}
+      {/* Account controls */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Streak Flame 🔥 */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-orange-200 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-900/60 text-orange-600 font-extrabold text-xs sm:text-sm cursor-pointer hover:scale-105 transition-transform"
-          title="Série de jours consécutifs"
-        >
-          <Flame className="w-4 h-4 text-orange-500 fill-orange-500 animate-pulse" />
-          <span>5</span>
-        </div>
-
-        {/* Gems / Diamants 💎 */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-sky-200 bg-sky-50 dark:bg-sky-950/30 dark:border-sky-900/60 text-sky-600 font-extrabold text-xs sm:text-sm cursor-pointer hover:scale-105 transition-transform"
-          title="Gemmes médicales gagnées"
-        >
-          <Diamond className="w-4 h-4 text-sky-500 fill-sky-500" />
-          <span>420</span>
-        </div>
-
-        {/* Hearts ❤️ */}
-        <div
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900/60 text-red-600 font-extrabold text-xs sm:text-sm"
-          title="Vies d'entraînement"
-        >
-          <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-          <span>5</span>
-        </div>
-
         {/* Dark mode toggle */}
         <button
           onClick={toggleDark}
           className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-dark-muted transition-all"
           title="Changer le thème"
         >
-          {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+          <Moon className="w-4 h-4 dark:hidden" />
+          <Sun className="hidden w-4 h-4 text-amber-400 dark:block" />
         </button>
 
-        {/* Avatar with Pro Crown */}
+        {/* Profile */}
         <Link
           href="/fr/profile"
           className="relative group cursor-pointer"
@@ -100,9 +60,6 @@ export default function DashboardTopbar({ user }: { user: User }) {
           <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-xs font-black shadow-card border-2 border-white dark:border-dark-card group-hover:scale-105 transition-transform">
             {initials}
           </div>
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-amber-400 text-amber-950 text-[9px] font-black flex items-center justify-center border border-white shadow">
-            👑
-          </span>
         </Link>
       </div>
     </header>

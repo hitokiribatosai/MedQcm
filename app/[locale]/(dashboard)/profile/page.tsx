@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   User, Mail, Phone, Calendar, School, Award,
   CheckCircle2,
@@ -210,7 +211,7 @@ export default function ProfilePage() {
           }`}
         >
           <Award className="w-4 h-4" />
-          Succès & Trophées
+          Statistiques
         </button>
 
         <button
@@ -375,60 +376,12 @@ export default function ProfilePage() {
         </form>
       )}
 
-      {/* TAB 2: Stats & Badges */}
+      {/* TAB 2: Account statistics */}
       {activeTab === 'stats' && (
-        <div className="space-y-6 animate-in">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-dark-card p-5 rounded-3xl border-2 border-emerald-100 dark:border-dark-border text-center space-y-1">
-              <span className="text-3xl font-black text-emerald-600">842</span>
-              <p className="text-xs font-bold text-gray-400 uppercase">QCMs Résolus</p>
-            </div>
-            <div className="bg-white dark:bg-dark-card p-5 rounded-3xl border-2 border-sky-100 dark:border-dark-border text-center space-y-1">
-              <span className="text-3xl font-black text-sky-600">88.5%</span>
-              <p className="text-xs font-bold text-gray-400 uppercase">Précision Clinique</p>
-            </div>
-            <div className="bg-white dark:bg-dark-card p-5 rounded-3xl border-2 border-orange-100 dark:border-dark-border text-center space-y-1">
-              <span className="text-3xl font-black text-orange-500">5</span>
-              <p className="text-xs font-bold text-gray-400 uppercase">Jours de Flamme 🔥</p>
-            </div>
-            <div className="bg-white dark:bg-dark-card p-5 rounded-3xl border-2 border-purple-100 dark:border-dark-border text-center space-y-1">
-              <span className="text-3xl font-black text-purple-600">#4</span>
-              <p className="text-xs font-bold text-gray-400 uppercase">Ligue Diamant</p>
-            </div>
-          </div>
-
-          {/* Badges Gallery */}
-          <div className="bg-white dark:bg-dark-card p-6 sm:p-8 rounded-3xl border-2 border-gray-100 dark:border-dark-border space-y-4">
-            <h3 className="text-sm font-black uppercase tracking-wider text-gray-400">
-              Trophées et Distinctions Médicales
-            </h3>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 text-center space-y-1">
-                <div className="text-3xl">🎯</div>
-                <h4 className="text-xs font-black text-emerald-900 dark:text-emerald-300">Sans Faute</h4>
-                <p className="text-[10px] text-gray-500">100% sur un module d&apos;Anatomie</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 text-center space-y-1">
-                <div className="text-3xl">🔥</div>
-                <h4 className="text-xs font-black text-orange-900 dark:text-orange-300">Guerrier</h4>
-                <p className="text-[10px] text-gray-500">5 jours consécutifs de révision</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 text-center space-y-1">
-                <div className="text-3xl">🧠</div>
-                <h4 className="text-xs font-black text-purple-900 dark:text-purple-300">Neurologue</h4>
-                <p className="text-[10px] text-gray-500">200 QCMs de système nerveux</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-dark-muted border border-dashed border-gray-300 text-center space-y-1 opacity-60">
-                <div className="text-3xl">👑</div>
-                <h4 className="text-xs font-black text-gray-700 dark:text-gray-300">Major</h4>
-                <p className="text-[10px] text-gray-500">Terminer 1ère année à 100%</p>
-              </div>
-            </div>
-          </div>
+        <div className="card p-6 space-y-4 animate-in">
+          <h2 className="text-lg font-bold text-[#1a2e25] dark:text-green-50">Votre progression réelle</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Retrouvez vos sessions terminées, réponses et résultats enregistrés dans votre compte.</p>
+          <Link href={`/${locale}/stats`} className="btn-primary inline-flex">Voir mes statistiques</Link>
         </div>
       )}
 
