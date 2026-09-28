@@ -13,7 +13,7 @@ const YEARS = [
   { number: 8, label: 'Concours Résidanat', color: 'from-amber-500 to-orange-600', modules: 35, free: false, special: true, xp: 2500 },
 ];
 
-export default async function DuolingoDashboardPage({params}: {params: Promise<{locale: string}>}) {
+export default async function DashboardPage({params}: {params: Promise<{locale: string}>}) {
   const {locale} = await params;
   const supabase = await createClient();
   let user = null;
@@ -44,9 +44,6 @@ export default async function DuolingoDashboardPage({params}: {params: Promise<{
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
               Prêt pour ta dose de QCMs, {firstName} ?
             </h1>
-            <p className="text-emerald-100 text-xs sm:text-sm font-medium leading-relaxed">
-              Consolide tes connaissances au quotidien avec des sessions courtes de 5 minutes inspirées de la méthode Duolingo.
-            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">

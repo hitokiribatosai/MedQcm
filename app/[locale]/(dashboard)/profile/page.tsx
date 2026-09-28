@@ -448,7 +448,7 @@ export default function ProfilePage() {
               Sécurité & Paramètres de l&apos;application
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Gérez votre mot de passe et vos préférences sonores style Duolingo.
+              Gérez votre mot de passe et vos préférences de l’application.
             </p>
           </div>
 

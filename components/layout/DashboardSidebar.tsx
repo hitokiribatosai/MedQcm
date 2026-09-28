@@ -33,7 +33,7 @@ export default function DashboardSidebar({ isAdmin }: { isAdmin: boolean }) {
   }
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-white dark:bg-dark-card border-r border-primary-100 dark:border-dark-border">
+    <aside className="hidden lg:flex sticky top-0 h-screen w-64 shrink-0 self-start flex-col overflow-y-auto bg-white dark:bg-dark-card border-r border-primary-100 dark:border-dark-border">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-6 py-5 border-b border-primary-100 dark:border-dark-border">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-glow">
