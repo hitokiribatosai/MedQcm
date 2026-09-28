@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import {
-  FolderArchive, Download, Lock, Search,
+  FolderArchive, Download, Search,
   Sparkles, ArrowRight,
   Clock
 } from 'lucide-react';
@@ -96,11 +96,11 @@ export default function StudentDepotPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cat.modules.map((mod) => {
-                const docs: CoursePdf[] = mod.documents || [
+                const docs: CoursePdf[] = [
                   {
                     id: `${mod.id}-pdf-1`,
                     moduleId: mod.id,
-                    title: `Polycopié — ${mod.nameFr}`,
+                    title: `Cours de ${mod.nameFr}`,
                     professor: '',
                     fileSize: '',
                     pagesCount: 0,
@@ -112,7 +112,8 @@ export default function StudentDepotPage() {
                 const filteredDocs = docs.filter((d) =>
                   !search ||
                   d.title.toLowerCase().includes(search.toLowerCase()) ||
-                  d.professor?.toLowerCase().includes(search.toLowerCase())
+                  d.professor?.toLowerCase().includes(search.toLowerCase()) ||
+                  mod.nameFr.toLowerCase().includes(search.toLowerCase())
                 );
 
                 if (filteredDocs.length === 0 && search) return null;
@@ -127,15 +128,9 @@ export default function StudentDepotPage() {
                         <span className="font-bold text-xs text-gray-400">
                           {mod.nameFr}
                         </span>
-                        {mod.isFree ? (
-                          <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200">
-                            1er Module Gratuit
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 dark:bg-dark-muted px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> Abonnement
-                          </span>
-                        )}
+                        <span className="text-[10px] font-black uppercase text-gray-500 bg-gray-100 dark:bg-dark-muted px-2 py-0.5 rounded-full">
+                          {en ? 'Document in preparation' : 'Document en préparation'}
+                        </span>
                       </div>
 
                       <div className="space-y-3">
@@ -179,7 +174,7 @@ export default function StudentDepotPage() {
                         </button>
 
 
-                      {!!mod.questions?.length && <Link
+                      {mod.availableQuestionCount > 0 && <Link
                         href={`/${locale}/quiz/${mod.id}?mode=exploration`}
                         className="text-xs font-black text-emerald-600 hover:underline flex items-center gap-1"
                       >

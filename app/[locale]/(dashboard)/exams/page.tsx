@@ -1,16 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
 import { Clock, Search, BookOpen } from "lucide-react";
 import { CURRICULUM_DATA } from "@/lib/data/curriculum-metadata";
+import ReadyExamCard, { type ReadyExam } from "@/components/quiz/ReadyExamCard";
 
 export default function ExamsHubPage() {
   const locale = useLocale();
   const en = locale === "en";
   const [year, setYear] = useState("all");
   const [search, setSearch] = useState("");
+  const [readyExams, setReadyExams] = useState<ReadyExam[]>([]);
+  const [examError, setExamError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/exams")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unavailable");
+        return response.json() as Promise<ReadyExam[]>;
+      })
+      .then((data) => { if (active) setReadyExams(data); })
+      .catch(() => { if (active) setExamError(true); });
+    return () => { active = false; };
+  }, []);
   const modules = CURRICULUM_DATA.filter(
     (item) => year === "all" || String(item.number) === year,
   )
@@ -34,22 +48,19 @@ export default function ExamsHubPage() {
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
           {en
-            ? "Browse the curriculum while exam sessions are being prepared."
-            : "Parcourez le programme pendant la préparation des sessions d’examen."}
+            ? "Choose an available timed exam or test the timer with sample questions."
+            : "Choisissez un examen chronométré disponible ou testez le chronomètre avec les questions exemples."}
         </p>
       </header>
-      <section
-        className="card p-6 border-2 border-amber-200 space-y-2"
-        aria-labelledby="exam-status"
-      >
-        <h2 id="exam-status" className="font-bold">
-          {en ? "Sessions in preparation" : "Sessions en préparation"}
-        </h2>
-        <p className="text-sm">
-          {en
-            ? "No mock exam is published yet. Sessions will become available after their questions, scoring and timer have been verified. No official exam date has been announced here."
-            : "Aucun examen blanc n’est encore publié. Les sessions seront disponibles après vérification des questions, du barème et du chronomètre. Aucune date officielle d’examen n’est annoncée ici."}
-        </p>
+      <section className="space-y-3" aria-labelledby="available-exams">
+        <h2 id="available-exams" className="text-xl font-bold">{en ? "Available exams" : "Examens disponibles"}</h2>
+        {examError && <p role="alert" className="card p-6">{en ? "Exam list is temporarily unavailable." : "La liste des examens est temporairement indisponible."}</p>}
+        {!examError && readyExams.length === 0 && <p className="card p-6 border-2 border-amber-200">
+          {en ? "No reviewed mock exam is published yet. Questions, scoring, and timing must be verified before release. No official exam date is announced here." : "Aucun examen blanc validé n’est encore publié. Les questions, le barème et le chronomètre doivent être vérifiés avant publication. Aucune date officielle d’examen n’est annoncée ici."}
+        </p>}
+        <div className="grid sm:grid-cols-2 gap-4">
+          {readyExams.map((exam) => <ReadyExamCard key={exam.module_id} exam={exam} locale={locale} />)}
+        </div>
       </section>
       <div className="flex flex-col sm:flex-row gap-4">
         <label className="flex flex-col gap-1 text-sm font-bold">

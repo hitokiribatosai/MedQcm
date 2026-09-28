@@ -12,6 +12,12 @@ const payload = z.discriminatedUnion("action", [
     count: z.number().int().min(1).max(100),
   }),
   z.object({
+    action: z.literal("startReview"),
+    id: z.string().uuid(),
+    module: z.string().min(1).max(100),
+    count: z.number().int().min(1).max(100),
+  }),
+  z.object({
     action: z.literal("save"),
     id: z.string().uuid(),
     answers: answerSchema,
@@ -47,7 +53,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid quiz request" }, { status: 400 });
   }
   const args =
-    body.action === "start"
+    body.action === "startReview"
+      ? { p_id: body.id, p_module: body.module, p_count: body.count }
+      : body.action === "start"
       ? {
           p_id: body.id,
           p_module: body.module,
@@ -66,7 +74,9 @@ export async function POST(request: Request) {
           ? { p_id: body.id, p_answers: body.answers }
           : { p_id: body.id };
   const name =
-    body.action === "start"
+    body.action === "startReview"
+      ? "start_review_attempt"
+      : body.action === "start"
       ? "start_training_attempt"
       : body.action === "save"
         ? "save_training_draft"

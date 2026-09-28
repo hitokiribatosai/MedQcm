@@ -1,6 +1,24 @@
 # MedQCM continuation guide
 
-Updated 2026-09-18. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
+Updated 2026-09-28. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
+
+## 2026-09-28 learning and exam update
+
+The owner chose Oran University as the intended curriculum authority, but has no official syllabus, course PDFs, or medically reviewed QCM bank yet. Treat `lib/data/curriculum-metadata.ts` as **draft navigation**, not an approved faculty programme. The six seeded questions remain unreviewed samples. Do not copy competitor questions, claim official sourcing, or set `exam_ready=true` until a named medical reviewer checks the questions, explanations, scoring, and provenance.
+
+Potential primary reference: [Oran 1 Faculty of Medicine 2025/26 first-year timetable](https://facmed.univ-oran1.dz/les-d%C3%A9partements/m%C3%A9decine/p%C3%A9dagogie/810-emploi-du-temps-des-cours-magistraux-l-annee-de-medecine-armee-universitaire-2025-2026.html). This is a timetable, not confirmation of the full 2026/27 syllabus or permission to republish course PDFs. Obtain the applicable academic year and faculty-approved year → module → course list before replacing draft metadata.
+
+This update adds:
+
+- `supabase/migrations/202609280001_learning_progress.sql`: owner-scoped module progress, latest missed/unanswered question queue, retry attempts, catalog overview, and reviewed exam discovery. It requires reviewer ID, review time, and source reference before an exam can be marked ready, and resets review when catalog questions change. The four seed modules' unverified source labels become “Exemple non validé”; completed attempt snapshots remain untouched. **One-time migration; apply only after checking the live schema.**
+- `/[locale]/review`: corrections and a retry session from the student's own completed answers. A correct completed retry removes the question from the queue.
+- `/[locale]/stats`: real module-level session count, accuracy, and distinct questions seen, alongside existing history.
+- `/[locale]/exams`: discovers reviewed, published exams from the database; timed sample links remain labeled as samples. New exams use the existing 90-seconds-per-question server timer and private answer keys.
+- `/api/modules`: safe count/review metadata for the module and quiz screens; no answer keys. The year screen now describes the draft programme and stops advertising invented QCM totals, XP, ranking, and inaccessible premium lessons. PDF placeholders no longer use invented official titles.
+
+The catalog now supports the path from source → medical review → `exam_ready`, but **the actual Oran programme/course taxonomy, content review, and admin import/publishing UI remain to be built**. New catalog modules outside the static navigation need a reviewed taxonomy mapping before they can appear in the year screens. No PDFs are uploaded or published. The owner may gather the content later; do not mark these steps complete prematurely.
+
+Validation: `PGLITE_MODULE=/private/tmp/.../pglite/dist/index.js node tests/database/learning-progress.mjs` exercises owner isolation, per-module metrics, wrong/unanswered queue, retry correctness, and exam discovery. Run it along with the older `recovery-payments.mjs`, TypeScript, ESLint, and production build before deployment. The temporary PGlite path varies by machine.
 
 ## Release status — read first
 

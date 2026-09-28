@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Stethoscope, LayoutDashboard, BookOpen,
   Clock, BarChart3, User, CreditCard, LogOut, Shield,
-  FolderArchive
+  FolderArchive, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/lib/auth/logout';
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/fr/depot',      label: 'Dépôt des Cours', icon: FolderArchive },
   { href: '/fr/exams',      label: 'Examens blancs',  icon: Clock },
   { href: '/fr/stats',      label: 'Statistiques',    icon: BarChart3 },
+  { href: '/fr/review',     label: 'Revoir mes erreurs', icon: RotateCcw },
   { href: '/fr/subscribe',  label: 'Abonnement',      icon: CreditCard },
   { href: '/fr/profile',    label: 'Profil',          icon: User },
 ];
@@ -48,11 +49,12 @@ export default function DashboardSidebar({ isAdmin }: { isAdmin: boolean }) {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href);
+          const localizedHref = href.replace('/fr/', `/${locale}/`);
+          const active = pathname.startsWith(localizedHref);
           return (
             <Link
               key={href}
-              href={href}
+              href={localizedHref}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
                 active
@@ -69,7 +71,7 @@ export default function DashboardSidebar({ isAdmin }: { isAdmin: boolean }) {
         {/* Admin link (visible ONLY for users with admin role) */}
         {isAdmin && (
           <Link
-            href="/fr/admin"
+            href={`/${locale}/admin`}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50 transition-all duration-200 mt-2 border-t border-primary-100 dark:border-dark-border pt-4"
           >
             <Shield className="w-4 h-4 shrink-0 text-amber-600" />

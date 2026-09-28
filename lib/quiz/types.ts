@@ -6,6 +6,7 @@ export type Attempt = {
   draft_revision: number;
   abandoned_at: string | null;
   sample_exam: boolean;
+  review_attempt: boolean;
   id: string;
   user_id: string;
   module_id: string;

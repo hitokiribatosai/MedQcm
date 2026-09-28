@@ -24,6 +24,17 @@ test('quiz API rejects cross-origin and unauthenticated requests', { skip: !orig
   assert.equal((await fetch(origin + '/api/quiz', {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status,401);
 });
 
+test('learning data endpoints require an authenticated account', { skip: !origin }, async () => {
+  for (const path of ['/api/modules', '/api/exams']) {
+    assert.equal((await fetch(origin + path)).status, 401, path);
+  }
+  for (const path of ['/fr/review', '/fr/stats']) {
+    const response = await fetch(origin + path, { redirect: 'manual' });
+    assert.equal(response.status, 307, path);
+    assert.equal(new URL(response.headers.get('location'), origin).pathname, '/fr/login');
+  }
+});
+
 
 test('subscription API rejects foreign origins and unsigned callers', { skip: !origin }, async () => {
   assert.equal((await fetch(origin + '/api/subscriptions')).status,401);
