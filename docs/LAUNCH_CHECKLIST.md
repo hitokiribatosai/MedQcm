@@ -2,6 +2,12 @@
 
 This is an acceptance checklist, not a claim that the site is ready for public or paid launch. Keep `payment_configuration.accepting_payments=false` until the payment items below pass. The six current QCMs are unreviewed samples and no course PDFs are published.
 
+## Verified on 2026-10-06
+
+- Three additive learning, private QCM draft, and question-report migrations applied in order to the live Supabase project after owner approval. Database checks preserved 3 accounts and 5 attempts; payment collection remains closed with 0 receipts.
+- GitHub CI passed for app commit `a9653d5`; Vercel reports that commit deployed, and Cloudflare deployed its Worker bundle. Local, Cloudflare, and Vercel route/access smoke tests each passed 5/5. The signed-in admin overview loaded real counts on both domains. Cloudflare loaded module progress, mistake review, the draft editor, and the empty report queue.
+- The auth URL allowlist includes both production domains' callback and password-reset paths. Fresh registration, confirmation, password recovery, second-student isolation, a real Storage upload, and receipt approval/expiry are **not yet accepted** in production. The free Supabase project has no scheduled backups.
+
 ## Release gate
 
 1. Confirm the Supabase project is running, the private `payment-receipts` bucket exists, and the numbered SQL migrations in `supabase/migrations/` match the live schema. Existing production migrations were applied manually; do not rerun them blindly or use the old Drizzle scaffold.
