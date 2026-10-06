@@ -24,4 +24,4 @@ jobs:
       - run: node tests/database/recovery-payments.mjs
       - run: node tests/database/learning-progress.mjs
       - run: node tests/database/admin-content.mjs
-      - run: npx next build --webpack
+      - run: npm run cf:build
