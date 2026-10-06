@@ -1,6 +1,20 @@
 # MedQCM continuation guide
 
-Updated 2026-09-28. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
+Updated 2026-10-06. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
+
+## 2026-10-06 release-preparation update
+
+This release includes the earlier learning/exam commit (`4c4a475`) plus launch-preparation changes. At the start of this update, GitHub `origin/main` was `5beb6fc`. **Verify the latest commit and deployed revision before continuing; do not assume local code is live.** The Supabase free project was found paused on 2026-10-05 and was resumed after explicit owner approval. Its SQL Editor showed quiz history and receipts present, but `training_module_progress()`, `question_drafts`, and `question_reports` absent. Live migration execution was awaiting the owner's action-time confirmation when this note was written. Payment collection remained closed (`accepting_payments=false`, blank instructions, provisional 365/180-day settings); the dashboard showed three auth accounts and no scheduled backups.
+
+Current code changes:
+
+- `202609280001_learning_progress.sql` from the local commit, plus `202610050001_admin_questions.sql` and `202610050002_question_reports.sql`, are tested in PGlite. The new admin QCM editor saves **private drafts only**. The new report form creates owner-scoped reports from completed quiz results, with an admin review queue and audit fields. The admin overview uses database counts. Do not publish draft questions without medical review.
+- Public landing, student dashboard, course library, admin imports/depot, profile and topbar no longer show invented growth, gamification, PDF, exam or AI-import claims. The student PDF page now reports absence of documents rather than generating synthetic file cards. English account/profile labels and mobile student navigation were improved.
+- Next.js was updated to 16.3.8. Unused Capacitor/Drizzle dependencies and scaffold were removed. The production-dependency `npm audit --omit=dev` reports zero known vulnerabilities; five high audit findings remain in the dev-only ESLint dependency chain with no non-breaking upstream fix at this time.
+- OpenNext 1.20.8 and Wrangler 4.147.0 are now declared with `wrangler.jsonc` for Worker `app`; `npm run cf:build` succeeds. A local Worker run passed the five route tests and protected-route redirects before the final UI-only changes. Cloudflare dashboard/CLI authentication expired and needs owner sign-in before live deploy. The app is still served from both Cloudflare and Vercel at their existing URLs.
+- `.github/workflows/ci.yml` and `docs/LAUNCH_CHECKLIST.md` provide repeatable checks and explicit launch gates.
+
+Latest local verification: TypeScript, lint, Webpack Next build inside OpenNext, nine auth/quiz tests, three PGlite database suites and five local Worker route tests passed. Re-run final checks after further changes, then apply migrations **in order** only after comparing the live schema and obtaining action-time approval for the access changes. Push only after live schema succeeds. Cloudflare deployment needs authenticated access; do not broaden OAuth grants silently. Verify Vercel and Cloudflare revisions and signed-in behavior afterward. Do not call the site public-launch-ready until the medical content, legal/operator/payment decisions, backups and owner-led account/payment acceptance in `docs/LAUNCH_CHECKLIST.md` are complete.
 
 ## 2026-09-28 learning and exam update
 
@@ -18,7 +32,7 @@ This update adds:
 
 The catalog now supports the path from source → medical review → `exam_ready`, but **the actual Oran programme/course taxonomy, content review, and admin import/publishing UI remain to be built**. New catalog modules outside the static navigation need a reviewed taxonomy mapping before they can appear in the year screens. No PDFs are uploaded or published. The owner may gather the content later; do not mark these steps complete prematurely.
 
-Validation: `PGLITE_MODULE=/private/tmp/.../pglite/dist/index.js node tests/database/learning-progress.mjs` exercises owner isolation, per-module metrics, wrong/unanswered queue, retry correctness, and exam discovery. Run it along with the older `recovery-payments.mjs`, TypeScript, ESLint, and production build before deployment. The temporary PGlite path varies by machine.
+Validation: `node tests/database/learning-progress.mjs` exercises owner isolation, per-module metrics, wrong/unanswered queue, retry correctness, and exam discovery. PGlite is now a dev dependency. Run it with `recovery-payments.mjs`, `admin-content.mjs`, TypeScript, ESLint and a production build before deployment.
 
 ## Release status — read first
 
@@ -40,7 +54,7 @@ Recovery/payment implementation `b8582f7` and rollout documentation `4c97c25` we
 | Timed samples (new release) | 90 seconds/question, database deadline, running answer keys private, last persisted draft scored after expiry, repeated completion safe. Clearly labeled unreviewed samples. |
 | Payments (new release) | Private receipts, pending queue, trusted admin review, audited atomic/idempotent approval, expiry entitlements and server-side premium quiz start checks. Collection remains closed. |
 | PDFs | Year → filtered module → file → title → optional professor/faculty → review. Local drafts only; no publishing or persistent document uploads. |
-| Other admin/marketing | Prototype imports/questions/reports, simulated dashboard features and unsupported claims still need work. Do not call them operational. |
+| Other admin/marketing | Private QCM drafts, reports and real admin metrics are implemented locally but require the new migrations and rollout. PDF import/publishing remains unavailable. |
 
 ## Database rollout
 
@@ -56,7 +70,7 @@ Also applied successfully on 2026-09-18, in this order:
 
 Each migration is transactional. Inspect live schema before running: these are one-time migrations, not idempotent scripts. Verify new columns/functions/policies and a **private** `payment-receipts` bucket afterward. The migrations replace start/finish wrappers and revoke student access to underlying core functions. New API calls use the five-argument start signature. Deploy only after both migrations succeed; verify actual Vercel production revision, not just Git push.
 
-Manual applications are not recorded in the Supabase CLI ledger. Reconcile history before adopting CLI deployments. `db/schema.ts` is an older scaffold, not the source of truth. Do not run `drizzle push` against production without reconciliation. Do not roll back by dropping tables containing attempts or receipts; use an additive correction or an explicitly planned restore.
+Manual applications are not recorded in the Supabase CLI ledger. Reconcile history before adopting CLI deployments. The old Drizzle scaffold was removed; SQL migrations are the source of truth. Do not roll back by dropping tables containing attempts or receipts; use an additive correction or an explicitly planned restore.
 
 ## Implementation map
 

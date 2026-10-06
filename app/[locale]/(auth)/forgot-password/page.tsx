@@ -9,19 +9,20 @@ import { z } from 'zod';
 import { Stethoscope, Mail, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-const forgotSchema = z.object({
-  email: z.string().email('Adresse email invalide'),
+const forgotSchema = (en: boolean) => z.object({
+  email: z.string().email(en ? 'Invalid email address' : 'Adresse email invalide'),
 });
-type ForgotForm = z.infer<typeof forgotSchema>;
+type ForgotForm = { email: string };
 
 export default function ForgotPasswordPage() {
   const locale = useLocale();
+  const en = locale === 'en';
   const supabase = createClient();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotForm>({
-    resolver: zodResolver(forgotSchema),
+    resolver: zodResolver(forgotSchema(en)),
   });
 
   async function onSubmit(data: ForgotForm) {
@@ -32,12 +33,12 @@ export default function ForgotPasswordPage() {
       });
 
       if (resetError) {
-        setError(resetError.message || 'Une erreur est survenue.');
+        setError(resetError.message || (en ? 'An error occurred.' : 'Une erreur est survenue.'));
         return;
       }
 
       setSubmitted(true);
-    } catch { setError('Connexion impossible. Réessayez.'); }
+    } catch { setError(en ? 'Request failed. Try again.' : 'Demande impossible. Réessayez.'); }
   }
 
   return (
@@ -52,7 +53,7 @@ export default function ForgotPasswordPage() {
             <span className="text-[#1a2e25] dark:text-green-50">Med</span>
             <span className="text-gradient">QCM</span>
           </h1>
-          <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">Réinitialisation du mot de passe</p>
+          <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">{en ? 'Password reset' : 'Réinitialisation du mot de passe'}</p>
         </div>
 
         {/* Card */}
@@ -62,21 +63,21 @@ export default function ForgotPasswordPage() {
               <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto dark:bg-primary-950/40">
                 <CheckCircle2 className="w-8 h-8 text-primary-600 dark:text-primary-400" />
               </div>
-              <h2 className="text-xl font-bold text-[#1a2e25] dark:text-green-50">Email envoyé !</h2>
+              <h2 className="text-xl font-bold text-[#1a2e25] dark:text-green-50">{en ? 'Email sent!' : 'Email envoyé !'}</h2>
               <p className="text-sm text-[#4b7a62] dark:text-green-300">
-                Si un compte existe pour cet email, vous recevrez un lien pour réinitialiser votre mot de passe d&apos;ici quelques instants.
+                {en ? 'If an account exists for this email, you will receive a password reset link shortly.' : 'Si un compte existe pour cet email, vous recevrez bientôt un lien pour réinitialiser votre mot de passe.'}
               </p>
               <div className="pt-2">
                 <Link href={`/${locale}/login`} className="btn-primary w-full justify-center">
-                  Retour à la connexion
+                  {en ? 'Back to sign in' : 'Retour à la connexion'}
                 </Link>
               </div>
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-bold mb-2 text-[#1a2e25] dark:text-green-50">Mot de passe oublié ?</h2>
+              <h2 className="text-xl font-bold mb-2 text-[#1a2e25] dark:text-green-50">{en ? 'Forgot password?' : 'Mot de passe oublié ?'}</h2>
               <p className="text-sm text-[#4b7a62] dark:text-green-400 mb-6">
-                Entrez votre adresse email pour recevoir les instructions de réinitialisation.
+                {en ? 'Enter your email to receive reset instructions.' : 'Entrez votre adresse email pour recevoir les instructions de réinitialisation.'}
               </p>
 
               {error && (
@@ -87,13 +88,15 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#1a2e25] dark:text-green-100 mb-1">Email</label>
+                  <label htmlFor="reset-email" className="block text-sm font-medium text-[#1a2e25] dark:text-green-100 mb-1">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       {...register('email')}
+                      id="reset-email"
                       type="email"
-                      placeholder="votre@email.com"
+                      autoComplete="email"
+                      placeholder={en ? 'you@example.com' : 'vous@exemple.com'}
                       className={`input pl-10 ${errors.email ? 'input-error' : ''}`}
                     />
                   </div>
@@ -102,7 +105,7 @@ export default function ForgotPasswordPage() {
 
                 <button type="submit" disabled={isSubmitting} className="btn-primary w-full justify-center py-3 mt-2">
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  Envoyer le lien
+                  {en ? 'Send reset link' : 'Envoyer le lien'}
                 </button>
               </form>
 
@@ -112,7 +115,7 @@ export default function ForgotPasswordPage() {
                   className="inline-flex items-center gap-2 text-sm text-[#4b7a62] hover:text-primary-700 dark:text-green-400 dark:hover:text-primary-300 font-medium"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Retour à la connexion
+                  {en ? 'Back to sign in' : 'Retour à la connexion'}
                 </Link>
               </div>
             </>

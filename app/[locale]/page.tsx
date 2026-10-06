@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { Stethoscope, BookOpen, Clock, BarChart3, FileUp, ArrowRight, Star, Users, Brain } from 'lucide-react';
+import { Stethoscope, BookOpen, Clock, BarChart3, FileUp, ArrowRight, Star } from 'lucide-react';
 import { SUBSCRIPTION_PRICING } from '@/lib/config/pricing';
 
 // Animated background blobs
@@ -10,19 +10,6 @@ function Blobs() {
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-200/40 rounded-full blur-3xl animate-pulse-slow" />
       <div className="absolute top-1/2 -right-32 w-80 h-80 bg-accent-200/30 rounded-full blur-3xl animate-pulse-slow delay-1000" />
       <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-primary-300/20 rounded-full blur-3xl animate-pulse-slow delay-2000" />
-    </div>
-  );
-}
-
-// Stats counter card
-function StatCard({ value, label, icon: Icon }: { value: string; label: string; icon: React.ElementType }) {
-  return (
-    <div className="card p-6 text-center flex flex-col items-center gap-3 slide-in">
-      <div className="w-12 h-12 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-        <Icon className="w-6 h-6 text-primary-600" />
-      </div>
-      <p className="text-3xl font-bold text-gradient">{value}</p>
-      <p className="text-sm text-[#4b7a62] dark:text-green-400 font-medium">{label}</p>
     </div>
   );
 }
@@ -55,6 +42,7 @@ const YEARS = [
 export default function HomePage() {
   const t = useTranslations();
   const en = useLocale() === 'en';
+  const locale = en ? 'en' : 'fr';
 
   return (
     <main className="min-h-screen bg-surface-50 dark:bg-dark-bg">
@@ -72,10 +60,10 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/fr/login" className="btn-ghost text-sm">
+            <Link href={`/${locale}/login`} className="btn-ghost text-sm">
               {t('auth.login_btn')}
             </Link>
-            <Link href="/fr/register" className="btn-primary text-sm">
+            <Link href={`/${locale}/register`} className="btn-primary text-sm">
               {t('home.cta_register')}
             </Link>
           </div>
@@ -89,7 +77,7 @@ export default function HomePage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-700 mb-6 animate-in">
             <Star className="w-3.5 h-3.5 text-accent-500 fill-current" />
-            <span className="text-xs font-semibold text-primary-700 dark:text-primary-300">La plateforme #1 des étudiants en médecine</span>
+            <span className="text-xs font-semibold text-primary-700 dark:text-primary-300">{t('home.preview_badge')}</span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight mb-4 slide-in">
@@ -102,7 +90,7 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 slide-in">
-            <Link href="/fr/register" className="btn-accent px-8 py-3 text-base">
+            <Link href={`/${locale}/register`} className="btn-accent px-8 py-3 text-base">
               {t('home.cta_register')}
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -122,13 +110,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats ────────────────────────────────────────── */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <StatCard value="40 000+" label={t('home.stats_qcms')} icon={Brain} />
-          <StatCard value="5 000+"  label={t('home.stats_users')} icon={Users} />
-          <StatCard value="50+"     label={t('home.stats_exams')} icon={Clock} />
-        </div>
+      <section className="py-12 px-4" aria-label={t('home.preview_badge')}>
+        <p className="card max-w-4xl mx-auto p-6 text-center text-sm text-[#4b7a62] dark:text-green-300">
+          {t('home.preview_notice')}
+        </p>
       </section>
 
       {/* ── Features ─────────────────────────────────────── */}
@@ -160,7 +145,7 @@ export default function HomePage() {
             <p className="text-sm text-[#4b7a62] dark:text-green-400">
               ✓ {t('subscribe.free_includes')}
             </p>
-            <Link href="/fr/register" className="btn-secondary mt-auto">
+            <Link href={`/${locale}/register`} className="btn-secondary mt-auto">
               {t('home.cta_register')}
             </Link>
           </div>
@@ -177,14 +162,12 @@ export default function HomePage() {
                   {en ? '/ year' : SUBSCRIPTION_PRICING.annual.billingPeriod}
                 </span>
               </div>
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {en ? 'Equivalent to 375 DA / month • Billed annually' : 'Soit 375 DA / mois • Facturé annuellement'}
-              </p>
+              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">{t('subscribe.planned_offer')}</p>
             </div>
             <p className="text-sm text-[#4b7a62] dark:text-green-400">
               ✓ {t('subscribe.premium_includes')}
             </p>
-            <Link href="/fr/subscribe" className="btn-primary mt-auto">
+            <Link href={`/${locale}/subscribe`} className="btn-primary mt-auto">
               {t('home.cta_offers')}
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -208,8 +191,8 @@ export default function HomePage() {
             © {new Date().getFullYear()} MedQCM. Tous droits réservés.
           </p>
           <div className="flex gap-4 text-sm">
-            <Link href="/fr/login"    className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">Connexion</Link>
-            <Link href="/fr/register" className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">S&apos;inscrire</Link>
+            <Link href={`/${locale}/login`} className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">{t('auth.login_btn')}</Link>
+            <Link href={`/${locale}/register`} className="text-[#4b7a62] hover:text-primary-600 dark:text-green-500 dark:hover:text-primary-400 transition-colors">{t('auth.register_btn')}</Link>
           </div>
         </div>
       </footer>

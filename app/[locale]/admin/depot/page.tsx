@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { useLocale } from 'next-intl';
 import {
   FolderArchive, UploadCloud, FileText, Plus, Trash2,
-  Download, Sparkles, X, Search
+  Download, X, Search
 } from 'lucide-react';
 import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum-metadata';
 
@@ -17,69 +15,13 @@ interface DepotItem extends CoursePdf {
   isDraft?: boolean;
 }
 
-const INITIAL_DEPOT: DepotItem[] = [
-  {
-    id: 'pdf-1',
-    moduleId: 'mod-y1-anat-general',
-    yearNumber: 1,
-    categoryName: 'Anatomie Humaine',
-    moduleName: 'Anatomie Générale & Ostéologie',
-    title: 'Polycopié Officiel — Ostéologie Générale & Repères Cardinaux',
-    professor: 'Pr. Benali / Faculté de Médecine',
-    fileSize: '4.8 Mo',
-    pagesCount: 42,
-    uploadDate: '05 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-2',
-    moduleId: 'mod-y1-anat-general',
-    yearNumber: 1,
-    categoryName: 'Anatomie Humaine',
-    moduleName: 'Anatomie Générale & Ostéologie',
-    title: 'Fiche Synthèse — Articulations & Loges du Membre Supérieur',
-    professor: 'Collège National d\'Anatomie',
-    fileSize: '2.1 Mo',
-    pagesCount: 16,
-    uploadDate: '01 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-3',
-    moduleId: 'mod-y2-cardio',
-    yearNumber: 2,
-    categoryName: 'Physiologie Cardiovasculaire',
-    moduleName: 'Cycle Cardiaque & Hémodynamique',
-    title: 'Support Magistral — Régulation Hémodynamique & Bruits du Cœur',
-    professor: 'Dr. Mansouri / CHU Alger',
-    fileSize: '6.3 Mo',
-    pagesCount: 54,
-    uploadDate: '10 Sept. 2026',
-    isFree: true,
-  },
-  {
-    id: 'pdf-4',
-    moduleId: 'mod-y4-cardio-sca',
-    yearNumber: 4,
-    categoryName: 'Cardiologie',
-    moduleName: 'Syndromes Coronariens Aigus (SCA)',
-    title: 'Guide Pratique — Prise en Charge des SCA ST+ et ST- (Recommandations ESC)',
-    professor: 'Collège des Enseignants de Cardiologie',
-    fileSize: '8.5 Mo',
-    pagesCount: 68,
-    uploadDate: '12 Sept. 2026',
-    isFree: false,
-  }
-];
-
 export default function AdminDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);
   const [selectedModule, setSelectedModule] = useState<string>(CURRICULUM_DATA[0]?.categories[0]?.modules[0]?.id || '');
-  const [items, setItems] = useState<DepotItem[]>(INITIAL_DEPOT);
+  const [items, setItems] = useState<DepotItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
 
-  const locale = useLocale();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [destinationYear, setDestinationYear] = useState('');
   const [destinationModule, setDestinationModule] = useState('');
@@ -329,14 +271,6 @@ export default function AdminDepotPage() {
                     Fichier en préparation
                   </span>
 
-                  {/* AI QCM Extraction Shortcut */}
-                  <Link
-                    href={`/${locale}/admin/import?year=${pdf.yearNumber}&module=${pdf.moduleId}`}
-                    className="btn-duo-green text-xs py-1.5 px-3 flex items-center gap-1 shadow-xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-200" />
-                    Générer QCMs via IA
-                  </Link>
                 </div>
               </div>
             ))}

@@ -8,12 +8,12 @@ import {
   Sparkles, ArrowRight,
   Clock
 } from 'lucide-react';
-import { CURRICULUM_DATA, CoursePdf } from '@/lib/data/curriculum-metadata';
+import { CURRICULUM_DATA } from '@/lib/data/curriculum-metadata';
 
 export default function StudentDepotPage() {
   const [selectedYear, setSelectedYear] = useState<number>(1);
   const [search, setSearch] = useState('');
-  const [selectedDoc, setSelectedDoc] = useState<{ moduleName: string; title: string; moduleId: string } | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<{ moduleName: string } | null>(null);
   const locale = useLocale();
   const en = locale === 'en';
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -36,13 +36,13 @@ export default function StudentDepotPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="badge-free text-[11px] mb-1 font-black uppercase">
-            Bibliothèque Numérique Médicale
+            {en ? 'Course library' : 'Bibliothèque des cours'}
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-[#1a2e25] dark:text-green-50">
-            Dépôt des Cours & Polycopiés
+            {en ? 'Courses and handouts' : 'Cours et polycopiés'}
           </h1>
           <p className="text-xs sm:text-sm text-[#4b7a62] dark:text-green-400 mt-1">
-            Les documents sont en préparation. Leur disponibilité sera indiquée ici après publication.
+            {en ? 'No document has been published yet. Availability will appear here after review.' : 'Aucun document n’est encore publié. Sa disponibilité sera indiquée ici après vérification.'}
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export default function StudentDepotPage() {
           className="btn-duo-gold self-start sm:self-auto text-xs sm:text-sm shadow-md"
         >
           <Sparkles className="w-4 h-4 fill-white" />
-          Voir les abonnements
+          {en ? 'Planned subscriptions' : 'Offres prévues'}
         </Link>
       </div>
 
@@ -80,7 +80,8 @@ export default function StudentDepotPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un polycopié, un chapitre, un enseignant..."
+          placeholder={en ? 'Search modules…' : 'Rechercher un module…'}
+          aria-label={en ? 'Search modules' : 'Rechercher un module'}
           className="input pl-10 text-xs sm:text-sm py-2.5 rounded-2xl w-full"
         />
       </div>
@@ -96,27 +97,7 @@ export default function StudentDepotPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cat.modules.map((mod) => {
-                const docs: CoursePdf[] = [
-                  {
-                    id: `${mod.id}-pdf-1`,
-                    moduleId: mod.id,
-                    title: `Cours de ${mod.nameFr}`,
-                    professor: '',
-                    fileSize: '',
-                    pagesCount: 0,
-                    uploadDate: '',
-                    isFree: mod.isFree,
-                  }
-                ];
-
-                const filteredDocs = docs.filter((d) =>
-                  !search ||
-                  d.title.toLowerCase().includes(search.toLowerCase()) ||
-                  d.professor?.toLowerCase().includes(search.toLowerCase()) ||
-                  mod.nameFr.toLowerCase().includes(search.toLowerCase())
-                );
-
-                if (filteredDocs.length === 0 && search) return null;
+                if (search && !mod.nameFr.toLowerCase().includes(search.toLowerCase())) return null;
 
                 return (
                   <div
@@ -133,39 +114,16 @@ export default function StudentDepotPage() {
                         </span>
                       </div>
 
-                      <div className="space-y-3">
-                        {filteredDocs.map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="p-3.5 rounded-xl bg-gray-50 dark:bg-dark-muted border flex items-start justify-between gap-3"
-                          >
-                            <div className="flex items-start gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-black text-xs shrink-0">
-                                PDF
-                              </div>
-                              <div>
-                                <h3 className="font-bold text-xs sm:text-sm text-[#1a2e25] dark:text-green-50 leading-snug">
-                                  {doc.title}
-                                </h3>
-                                <p className="text-[11px] text-gray-400 mt-0.5">
-                                  {en ? 'Document in preparation' : 'Document en préparation'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">
+                        {en ? 'No PDF has been published for this module.' : 'Aucun PDF n’est publié pour ce module.'}
+                      </p>
                     </div>
 
                     <div className="mt-5 pt-3 border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
                       <button
                           type="button"
                           onClick={() => {
-                            setSelectedDoc({
-                              moduleName: mod.nameFr,
-                              title: filteredDocs[0]?.title || `Polycopié de ${mod.nameFr}`,
-                              moduleId: mod.id,
-                            });
+                            setSelectedDoc({ moduleName: mod.nameFr });
                           }}
                           className="btn-duo-green text-xs py-2 px-4 shadow-xs flex items-center gap-1.5 cursor-pointer"
                         >
@@ -208,7 +166,7 @@ export default function StudentDepotPage() {
                     {en ? 'Document in preparation' : 'Document en préparation'}
                   </span>
                   <h3 id="depot-modal-title" className="text-sm sm:text-base font-black text-[#1a2e25] dark:text-green-50">
-                    {selectedDoc.title}
+                    {selectedDoc.moduleName}
                   </h3>
                 </div>
               </div>
@@ -223,7 +181,7 @@ export default function StudentDepotPage() {
             </div>
 
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              {en ? 'This document is being prepared and is not available to download yet.' : 'Ce document est en préparation et n’est pas encore disponible au téléchargement.'}
+              {en ? 'No PDF is available for this module yet.' : 'Aucun PDF n’est encore disponible pour ce module.'}
             </p>
 
             <div className="pt-3 border-t border-gray-100 dark:border-dark-border flex flex-col sm:flex-row items-center justify-between gap-2">

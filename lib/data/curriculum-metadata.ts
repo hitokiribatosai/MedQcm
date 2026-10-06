@@ -5,7 +5,7 @@ import type {
   CategoryData as BaseCategory,
 } from "./curriculum";
 export type { CoursePdf, QuestionData } from "./curriculum";
-export type ModuleData = BaseModule & { availableQuestionCount: number };
+export type ModuleData = Omit<BaseModule, 'questionCount' | 'documents'> & { availableQuestionCount: number };
 export type CategoryData = Omit<BaseCategory, "modules"> & {
   modules: ModuleData[];
 };
@@ -27,32 +27,7 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie Générale & Ostéologie",
             descriptionFr:
               "Généralités sur le squelette, articulations, plans anatomiques et repères osseux cardinaux.",
-            questionCount: 45,
             isFree: true,
-            documents: [
-              {
-                id: "pdf-anat-1",
-                moduleId: "mod-y1-anat-general",
-                title:
-                  "Polycopié Officiel — Ostéologie Générale & Repères Cardinaux",
-                professor: "Pr. Benali / Faculté de Médecine",
-                fileSize: "4.8 Mo",
-                pagesCount: 42,
-                uploadDate: "05 Sept. 2026",
-                isFree: true,
-              },
-              {
-                id: "pdf-anat-2",
-                moduleId: "mod-y1-anat-general",
-                title:
-                  "Fiche Synthèse — Articulations & Loges du Membre Supérieur",
-                professor: "Collège National d'Anatomie",
-                fileSize: "2.1 Mo",
-                pagesCount: 16,
-                uploadDate: "01 Sept. 2026",
-                isFree: true,
-              },
-            ],
             availableQuestionCount: 3,
           },
           {
@@ -60,7 +35,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie du Thorax & Médiastin",
             descriptionFr:
               "Cœur, gros vaisseaux, plèvre, poumons et innervation autonome.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -69,7 +43,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Abdomen & Pelvis",
             descriptionFr:
               "Péritoine, tube digestif, loges rétro-péritonéales et périnée.",
-            questionCount: 80,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -78,7 +51,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie de la Tête & du Cou",
             descriptionFr:
               "Crâne, face, fosses nasales, larynx, pharynx et nerfs crâniens.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -87,7 +59,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie des Membres",
             descriptionFr:
               "Membre supérieur et inférieur : os, muscles, vascularisation et innervation.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -102,7 +73,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Cytologie (Biologie Cellulaire)",
             descriptionFr:
               "Membrane plasmique, organites cellulaires, noyau, cycle cellulaire et division (mitose/méiose).",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -111,7 +81,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Histologie Générale",
             descriptionFr:
               "Tissus épithéliaux, conjonctifs, musculaires et nerveux. Techniques histologiques.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -126,7 +95,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Embryologie Générale",
             descriptionFr:
               "Gamétogenèse, fécondation, segmentation, gastrulation et organogenèse précoce.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -141,7 +109,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiologie Générale",
             descriptionFr:
               "Physiologie membranaire, potentiels de repos et d'action, pompe Na+/K+ et synapses.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -150,7 +117,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiologie du Muscle Squelettique",
             descriptionFr:
               "Couplage excitation-contraction, sarcomère et métabolisme énergétique.",
-            questionCount: 40,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -165,7 +131,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Chimie Générale & Organique",
             descriptionFr:
               "Atomistique, liaisons chimiques, thermodynamique, chimie organique et fonctions chimiques.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -174,7 +139,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Biochimie Structurale",
             descriptionFr:
               "Structure des glucides, lipides, protéines et acides nucléiques.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -189,7 +153,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Biophysique Médicale",
             descriptionFr:
               "Propriétés des solutions, pH et tampons, radiations ionisantes et non ionisantes, optique médicale.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -204,7 +167,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Biostatistiques & Informatique Médicale",
             descriptionFr:
               "Statistiques descriptives, probabilités, tests d'hypothèse et introduction à l'informatique médicale.",
-            questionCount: 35,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -219,7 +181,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Santé, Société & Humanité",
             descriptionFr:
               "Histoire de la médecine, éthique médicale, déontologie et communication avec le patient.",
-            questionCount: 25,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -241,7 +202,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Immunologie Fondamentale",
             descriptionFr:
               "Immunité innée et adaptative, cellules immunitaires, anticorps, CMH et réactions d'hypersensibilité.",
-            questionCount: 60,
             isFree: true,
             availableQuestionCount: 0,
           },
@@ -250,7 +210,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Génétique Médicale",
             descriptionFr:
               "ADN, ARN, expression des gènes, mutations, hérédité mendélienne et chromosomopathies.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -265,7 +224,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Système Endocrinien",
             descriptionFr:
               "Axe hypothalamo-hypophysaire, thyroïde, surrénales, pancréas endocrine et hormones sexuelles.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -274,7 +232,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Appareil Génital",
             descriptionFr:
               "Anatomie et physiologie des appareils génitaux masculin et féminin, cycle menstruel.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -289,7 +246,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Appareil Digestif",
             descriptionFr:
               "Anatomie, histologie et physiologie du tube digestif, foie, pancréas exocrine et péritoine.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -304,7 +260,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Appareil Urinaire & Rein",
             descriptionFr:
               "Anatomie rénale, néphron, filtration glomérulaire, équilibre acido-basique et voies urinaires.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -319,7 +274,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiologie Cardiovasculaire",
             descriptionFr:
               "Cycle cardiaque, hémodynamique, courbes de pression, ECG de base et régulation de la PA.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 1,
           },
@@ -328,7 +282,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiologie Respiratoire",
             descriptionFr:
               "Mécanique ventilatoire, échanges gazeux alvéolaires, transport O2/CO2 et régulation.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -343,7 +296,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Système Nerveux Central & Périphérique",
             descriptionFr:
               "Anatomie et physiologie du SNC, moelle épinière, tronc cérébral, cortex et nerfs crâniens.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -352,7 +304,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Organes des Sens",
             descriptionFr:
               "Œil et vision, oreille et audition, goût, odorat et sensibilité somatique.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -367,7 +318,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Biochimie Métabolique",
             descriptionFr:
               "Métabolisme des glucides, lipides, acides aminés, enzymologie et bioénergétique.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -382,7 +332,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Histologie des Appareils & Organes",
             descriptionFr:
               "Histologie du cœur, poumon, rein, foie, tube digestif, glandes endocrines et gonades.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -397,7 +346,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Embryologie Spéciale des Appareils",
             descriptionFr:
               "Développement embryonnaire de chaque appareil : cœur, appareil digestif, urogénital, nerveux.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -419,7 +367,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Cardiovasculaire",
             descriptionFr:
               "Souffles cardiaques, insuffisance cardiaque, signes d'ischémie et œdèmes.",
-            questionCount: 75,
             isFree: true,
             availableQuestionCount: 1,
           },
@@ -428,7 +375,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Respiratoire",
             descriptionFr:
               "Syndrome de condensation, épanchements pleuraux et râles auscultatoires.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -437,7 +383,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Digestive",
             descriptionFr:
               "Examen de l'abdomen, ictère, ascite, hépatomégalie et toucher rectal.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -446,7 +391,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Néphro-Urologique",
             descriptionFr:
               "Œdèmes, protéinurie, hématurie, syndromes glomérulaires et insuffisance rénale.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -455,7 +399,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Neurologique",
             descriptionFr:
               "Examen neurologique, déficits moteurs/sensitifs, réflexes et syndromes neurologiques.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -464,7 +407,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sémiologie Endocrinienne",
             descriptionFr:
               "Goitre, signes de dysthyroïdie, diabète et syndrome de Cushing.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -479,7 +421,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pharmacologie Générale",
             descriptionFr:
               "Pharmacocinétique (ADME), pharmacodynamie, interactions médicamenteuses et iatrogénie.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -488,7 +429,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pharmacologie Spéciale",
             descriptionFr:
               "Antibiotiques, anti-inflammatoires, antalgiques, antihypertenseurs et psychotropes.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -503,7 +443,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Bactériologie Médicale",
             descriptionFr:
               "Classification, pouvoir pathogène, diagnostic bactériologique et antibiogramme.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -512,7 +451,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Virologie Médicale",
             descriptionFr:
               "Structure virale, cycles de réplication, diagnostic virologique et principales viroses.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -521,7 +459,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Mycologie & Parasitologie",
             descriptionFr:
               "Champignons pathogènes, parasites protozoaires et helminthes, cycles parasitaires.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -536,7 +473,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie Pathologique Générale",
             descriptionFr:
               "Inflammation, processus tumoral, nécrose, apoptose et pathologie vasculaire.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -551,7 +487,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiopathologie des Grands Syndromes",
             descriptionFr:
               "Mécanismes physiopathologiques de l'insuffisance cardiaque, respiratoire, rénale et hépatique.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -566,7 +501,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Radiologie & Imagerie Médicale",
             descriptionFr:
               "Principes de la radiologie standard, échographie, scanner, IRM et médecine nucléaire.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -581,7 +515,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Immunologie Clinique & Pathologique",
             descriptionFr:
               "Auto-immunité, déficits immunitaires, transplantation et immunothérapie.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -604,7 +537,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Syndromes Coronariens Aigus (SCA)",
             descriptionFr:
               "SCA ST+ et ST-, prise en charge immédiate, troponine et reperfusion.",
-            questionCount: 90,
             isFree: true,
             availableQuestionCount: 1,
           },
@@ -613,7 +545,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Insuffisance Cardiaque",
             descriptionFr:
               "Critères diagnostiques, classification NYHA, OAP et trithérapie/quadrithérapie.",
-            questionCount: 85,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -622,7 +553,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Hypertension Artérielle",
             descriptionFr:
               "HTA essentielle et secondaire, bilan étiologique et stratégies thérapeutiques.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -631,7 +561,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Valvulopathies",
             descriptionFr:
               "Rétrécissement et insuffisance aortique/mitrale, RAA et endocardite infectieuse.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -640,7 +569,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Troubles du Rythme & de la Conduction",
             descriptionFr:
               "Fibrillation atriale, tachycardies, BAV, flutter et traitement antiarythmique.",
-            questionCount: 75,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -655,7 +583,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Asthme & BPCO",
             descriptionFr:
               "Physiopathologie, classification GINA/GOLD, exacerbations et traitement de fond.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -664,7 +591,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pneumonies & Infections Respiratoires",
             descriptionFr:
               "PAC, pneumonie nosocomiale, abcès pulmonaire et pleurésies purulentes.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -673,7 +599,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Tuberculose Pulmonaire",
             descriptionFr:
               "Primo-infection, tuberculose maladie, BK, IDR et protocoles de traitement (2RHZE/4RH).",
-            questionCount: 80,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -682,7 +607,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Cancer Broncho-Pulmonaire",
             descriptionFr:
               "Types histologiques, staging TNM, syndrome de Pancoast-Tobias et options thérapeutiques.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -691,7 +615,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Épanchements Pleuraux & Pneumothorax",
             descriptionFr:
               "Transsudat vs exsudat, ponction pleurale, drainage et pneumothorax spontané.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -706,7 +629,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Ulcère Gastro-Duodénal & RGO",
             descriptionFr:
               "Helicobacter pylori, complications hémorragiques, perforation et traitement par IPP.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -715,7 +637,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Hépatites Virales & Cirrhose",
             descriptionFr:
               "HBV, HCV, cirrhose et ses complications (ascite, HTP, CHC) et transplantation.",
-            questionCount: 75,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -724,7 +645,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "MICI & Troubles Fonctionnels",
             descriptionFr:
               "Maladie de Crohn, RCH, syndrome de l'intestin irritable et colopathie fonctionnelle.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -733,7 +653,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pathologie Pancréatique & Biliaire",
             descriptionFr:
               "Pancréatite aiguë et chronique, lithiase biliaire et cholécystite.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -748,7 +667,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "AVC Ischémiques & Hémorragiques",
             descriptionFr:
               "Territoires vasculaires, thrombolyse, thrombectomie et prévention secondaire.",
-            questionCount: 80,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -757,7 +675,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Épilepsies & Céphalées",
             descriptionFr:
               "Classification des crises, EEG, état de mal épileptique, migraine et algies faciales.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -766,7 +683,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Sclérose en Plaques & Neuropathies",
             descriptionFr:
               "SEP, syndrome de Guillain-Barré, neuropathies périphériques et compression médullaire.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -781,7 +697,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Méningites & Méningo-Encéphalites",
             descriptionFr:
               "Méningites bactériennes, virales, tuberculeuse, PL et antibiothérapie de 1ère intention.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -790,7 +705,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Fièvres & Syndromes Infectieux",
             descriptionFr:
               "Fièvre typhoïde, brucellose, paludisme, leptospirose et fièvre au retour de voyage.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -799,7 +713,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "VIH/SIDA & Infections Opportunistes",
             descriptionFr:
               "Dépistage, classification OMS/CDC, prophylaxie et trithérapie antirétrovirale.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -814,7 +727,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anémies & Hémoglobinopathies",
             descriptionFr:
               "Anémies ferriprives, mégaloblastiques, hémolytiques, drépanocytose et thalassémie.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -823,7 +735,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Leucémies & Lymphomes",
             descriptionFr:
               "LAM, LAL, LLC, LMC, lymphome de Hodgkin et non hodgkinien, myélome multiple.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -832,7 +743,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Hémostase & Thromboses",
             descriptionFr:
               "Coagulation, CIVD, thrombopénies, anticoagulants et thrombophilies.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -855,7 +765,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Néonatalogie",
             descriptionFr:
               "Détresse respiratoire du nouveau-né, score de Silverman, prématurité et ictère néonatal.",
-            questionCount: 65,
             isFree: true,
             availableQuestionCount: 0,
           },
@@ -864,7 +773,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Croissance & Développement",
             descriptionFr:
               "Courbes de croissance, retard staturo-pondéral, puberté normale et pathologique.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -873,7 +781,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Infections Pédiatriques",
             descriptionFr:
               "Vaccination, rougeole, varicelle, coqueluche, bronchiolite et GEA du nourrisson.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -882,7 +789,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Nutrition & Déshydratation",
             descriptionFr:
               "Malnutrition, déshydratation aiguë du nourrisson, SRO et alimentation du nourrisson.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -891,7 +797,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Urgences Pédiatriques",
             descriptionFr:
               "Convulsions fébriles, invagination intestinale, corps étrangers et intoxications.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -906,7 +811,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Grossesse Normale & Pathologique",
             descriptionFr:
               "Suivi de grossesse, HTA gravidique, pré-éclampsie, diabète gestationnel et RCIU.",
-            questionCount: 75,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -915,7 +819,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Accouchement & Délivrance",
             descriptionFr:
               "Mécanisme de l'accouchement, partogramme, césarienne et hémorragie du post-partum.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -924,7 +827,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pathologies Gynécologiques",
             descriptionFr:
               "Fibrome utérin, endométriose, kyste ovarien, cancer du col et du sein.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -933,7 +835,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Contraception & Infertilité",
             descriptionFr:
               "Méthodes contraceptives, planning familial, bilan d'infertilité et PMA.",
-            questionCount: 40,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -948,7 +849,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Fractures & Traumatismes",
             descriptionFr:
               "Fractures des membres, du bassin et du rachis, luxations et entorses.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -957,7 +857,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Rhumatologie",
             descriptionFr:
               "Polyarthrite rhumatoïde, arthrose, spondylarthrites, goutte et lupus.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -966,7 +865,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Médecine Physique & Rééducation",
             descriptionFr:
               "Principes de rééducation, appareillage, handicap moteur et réadaptation fonctionnelle.",
-            questionCount: 35,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -981,7 +879,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Urologie",
             descriptionFr:
               "Lithiase urinaire, HBP, cancer de la prostate, tumeurs rénales et infections urinaires.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -990,7 +887,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Néphrologie",
             descriptionFr:
               "IRA, IRC, glomérulonéphrites, syndrome néphrotique, dialyse et transplantation rénale.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1005,7 +901,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Troubles Psychiatriques Majeurs",
             descriptionFr:
               "Schizophrénie, troubles bipolaires, dépression, troubles anxieux et addictions.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1014,7 +909,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Urgences Psychiatriques",
             descriptionFr:
               "Crise suicidaire, agitation aiguë, BDA, confusion mentale et cadre médico-légal.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1029,7 +923,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Diabète & Complications",
             descriptionFr:
               "DT1, DT2, complications aiguës (acidocétose, hypoglycémie), microangiopathie et macroangiopathie.",
-            questionCount: 75,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1038,7 +931,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pathologies Thyroïdiennes & Surrénaliennes",
             descriptionFr:
               "Hypo/hyperthyroïdie, nodules, cancer thyroïdien, insuffisance surrénale et Cushing.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1061,7 +953,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "États de Choc",
             descriptionFr:
               "Choc septique, cardiogénique, hypovolémique et anaphylactique — remplissage et amines.",
-            questionCount: 80,
             isFree: true,
             availableQuestionCount: 0,
           },
@@ -1070,7 +961,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Comas & Altération de Conscience",
             descriptionFr:
               "Score de Glasgow, étiologies, prise en charge et ventilation mécanique.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1079,7 +969,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Arrêt Cardiaque & Réanimation Cardio-Pulmonaire",
             descriptionFr:
               "Algorithme de l'ACR, CEE, adrénaline, amiodarone et hypothermie thérapeutique.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1088,7 +977,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Intoxications Aiguës",
             descriptionFr:
               "Intoxications médicamenteuses, CO, organophosphorés, caustiques et antidotes.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1103,7 +991,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Médecine Légale & Droit Médical",
             descriptionFr:
               "Responsabilité médicale, certificats, thanatologie, blessures et expertise judiciaire.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1112,7 +999,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Déontologie & Éthique Médicale",
             descriptionFr:
               "Code de déontologie algérien, secret médical, consentement éclairé et fin de vie.",
-            questionCount: 35,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1127,7 +1013,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "ORL Médicale & Chirurgicale",
             descriptionFr:
               "Otites, sinusites, angines, vertiges, surdité, dyspnée laryngée et cancers ORL.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1142,7 +1027,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Ophtalmologie",
             descriptionFr:
               "Glaucome, cataracte, DMLA, rétinopathie diabétique, œil rouge et traumatismes oculaires.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1157,7 +1041,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Dermatologie & Vénérologie",
             descriptionFr:
               "Eczéma, psoriasis, urticaire, toxidermies, infections cutanées et IST.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1172,7 +1055,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Psychologie Médicale",
             descriptionFr:
               "Relation médecin-malade, annonce de mauvaise nouvelle, deuil et stress du soignant.",
-            questionCount: 30,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1187,7 +1069,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Santé Publique & Système de Santé",
             descriptionFr:
               "Organisation du système de santé algérien, économie de santé, épidémiologie et prévention.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1202,7 +1083,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Chirurgie Abdominale & Digestive",
             descriptionFr:
               "Appendicite, hernies, occlusion intestinale, péritonite et chirurgie hépatobiliaire.",
-            questionCount: 65,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1211,7 +1091,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Chirurgie Traumatologique & Orthopédique",
             descriptionFr:
               "Polytraumatisé, fractures ouvertes, ostéosynthèse et complications post-opératoires.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1234,7 +1113,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Prescriptions d'Urgence & Antibiothérapie Probabiliste",
             descriptionFr:
               "Protocoles de garde, adaptations rénales, antibiogramme et analgésie de palier 3.",
-            questionCount: 60,
             isFree: true,
             availableQuestionCount: 0,
           },
@@ -1243,7 +1121,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Gestes Techniques & Procédures",
             descriptionFr:
               "Pose de VVP, sondage urinaire, ponction pleurale/lombaire/d'ascite et sutures.",
-            questionCount: 45,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1252,7 +1129,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Conduite à Tenir de Garde",
             descriptionFr:
               "CAT devant une douleur thoracique, abdominale, dyspnée, fièvre et hémorragie.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1267,7 +1143,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Stage de Médecine Interne",
             descriptionFr:
               "Maladies systémiques, lupus, vascularites, sarcoïdose et amylose.",
-            questionCount: 55,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1276,7 +1151,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Stage de Chirurgie",
             descriptionFr:
               "Pré-opératoire, per-opératoire, post-opératoire et complications chirurgicales.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1299,7 +1173,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Anatomie — Programme Résidanat",
             descriptionFr:
               "Anatomie de tous les appareils : cardiovasculaire, digestif, respiratoire, neurologie, tête & cou.",
-            questionCount: 120,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1308,7 +1181,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Biochimie — Programme Résidanat",
             descriptionFr:
               "Métabolisme des acides aminés, protéines, glucides, lipides, enzymologie et hormones.",
-            questionCount: 80,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1317,7 +1189,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Physiologie — Programme Résidanat",
             descriptionFr:
               "Physiologie de tous les systèmes : cardiovasculaire, respiratoire, rénal, digestif et nerveux.",
-            questionCount: 90,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1326,7 +1197,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Génétique & Cytologie — Programme Résidanat",
             descriptionFr:
               "ADN, ARN, mutations, expression des gènes, chromosomopathies et conseil génétique.",
-            questionCount: 60,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1341,7 +1211,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Médecine Interne & Maladies Systémiques",
             descriptionFr:
               "Lupus, vascularites, sarcoïdose, amylose et maladies auto-immunes systémiques.",
-            questionCount: 70,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1350,7 +1219,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Chirurgie Générale — Programme Résidanat",
             descriptionFr:
               "Abdomen aigu, chirurgie digestive, cancérologie chirurgicale et chirurgie d'urgence.",
-            questionCount: 85,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1359,7 +1227,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Pédiatrie — Programme Résidanat",
             descriptionFr:
               "Néonatalogie, pathologies infectieuses, nutritionnelles, urgences pédiatriques.",
-            questionCount: 75,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1374,7 +1241,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Épreuves Classantes & Cas Cliniques 2020–2026",
             descriptionFr:
               "Sujets corrigés et commentés par les majors de promotion.",
-            questionCount: 300,
             isFree: false,
             availableQuestionCount: 0,
           },
@@ -1389,7 +1255,6 @@ export const CURRICULUM_DATA: YearData[] = [
             nameFr: "Santé Publique & Biostatistiques — Programme Résidanat",
             descriptionFr:
               "Organisation du système de santé algérien, économie de la santé, médecine légale et épidémiologie.",
-            questionCount: 50,
             isFree: false,
             availableQuestionCount: 0,
           },

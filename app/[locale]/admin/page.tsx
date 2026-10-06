@@ -1,140 +1,56 @@
-'use client';
-
 import Link from 'next/link';
-import {
-  CreditCard, HelpCircle, Users, TrendingUp,
-  Clock, ArrowRight, UploadCloud, Shield, CheckCircle2
-} from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { requireAdmin } from '@/lib/auth/server';
 
-export default function AdminOverviewPage() {
-  return (
-    <div className="space-y-8 pb-16">
-      {/* Header */}
-      <div>
-        <span className="badge-free text-[11px] mb-1 font-bold uppercase">
-          Administration MedQCM
-        </span>
-        <h1 className="text-3xl font-black text-[#1a2e25] dark:text-green-50">
-          Tableau de Bord Administrateur
-        </h1>
-        <p className="text-xs sm:text-sm text-[#4b7a62] dark:text-green-400 mt-1">
-          Supervision des inscriptions, validation des paiements et gestion des épreuves.
-        </p>
-      </div>
+type Metrics = {
+  registered_accounts: number;
+  sample_questions: number;
+  reviewed_questions: number;
+  private_drafts: number;
+  pending_receipts: number;
+  active_subscriptions: number;
+};
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-5 border border-primary-200 dark:border-dark-border bg-gradient-to-br from-amber-50 to-orange-50/40 dark:from-amber-950/20 dark:to-transparent">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase text-amber-800 dark:text-amber-300">
-              Paiements en attente
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500 text-amber-950 flex items-center justify-center font-bold">
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">2</div>
-          <Link href="/fr/admin/subscriptions" className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline mt-2 inline-flex items-center gap-1">
-            Traiter les reçus →
-          </Link>
-        </div>
+export default async function AdminOverviewPage({params}: {params: Promise<{locale: string}>}) {
+  const {locale} = await params;
+  const en = locale === 'en';
+  await requireAdmin(locale);
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_overview_metrics');
+  const metrics = data as Metrics | null;
+  const cards = metrics ? [
+    { label: en ? 'Pending receipts' : 'Reçus en attente', value: metrics.pending_receipts },
+    { label: en ? 'Registered accounts' : 'Comptes inscrits', value: metrics.registered_accounts },
+    { label: en ? 'Sample questions' : 'Questions exemples', value: metrics.sample_questions },
+    { label: en ? 'Active subscriptions' : 'Abonnements actifs', value: metrics.active_subscriptions },
+    { label: en ? 'Private question drafts' : 'Brouillons QCM privés', value: metrics.private_drafts },
+    { label: en ? 'Reviewed questions' : 'Questions relues', value: metrics.reviewed_questions },
+  ] : [];
 
-        <div className="card p-5 border border-primary-100 dark:border-dark-border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase text-gray-500">
-              Étudiants Actifs
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-700 dark:bg-dark-muted flex items-center justify-center">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">1 420</div>
-          <span className="text-[11px] text-emerald-600 font-semibold">+18% ce mois</span>
-        </div>
-
-        <div className="card p-5 border border-primary-100 dark:border-dark-border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase text-gray-500">
-              Banque de QCMs
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-primary-50 text-primary-700 dark:bg-dark-muted flex items-center justify-center">
-              <HelpCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">15 480</div>
-          <span className="text-[11px] text-[#4b7a62] dark:text-green-400">7 années + Résidanat</span>
-        </div>
-
-        <div className="card p-5 border border-primary-100 dark:border-dark-border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase text-gray-500">
-              Abonnements Actifs
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-accent-50 text-accent-700 dark:bg-accent-950 flex items-center justify-center">
-              <CreditCard className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-black text-[#1a2e25] dark:text-green-50">894</div>
-          <span className="text-[11px] text-accent-700 dark:text-accent-400 font-semibold">Taux rétention 92%</span>
-        </div>
-      </div>
-
-      {/* Quick Action Cards */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Link
-          href="/fr/admin/subscriptions"
-          className="card p-6 border-2 border-amber-300 dark:border-amber-700/60 hover:shadow-lg transition-all group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center mb-4">
-            <CreditCard className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-[#1a2e25] dark:text-green-50 group-hover:text-amber-700 transition-colors">
-            Activer les abonnements
-          </h3>
-          <p className="text-xs text-[#4b7a62] dark:text-green-400 mt-1">
-            2 reçus d'étudiants en attente de validation manuelle
-          </p>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 mt-4">
-            Gérer les demandes <ArrowRight className="w-3.5 h-3.5" />
-          </span>
-        </Link>
-
-        <Link
-          href="/fr/admin/import"
-          className="card p-6 border border-primary-200 dark:border-dark-border hover:shadow-lg transition-all group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 flex items-center justify-center mb-4">
-            <UploadCloud className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-[#1a2e25] dark:text-green-50 group-hover:text-primary-600 transition-colors">
-            Import de cours PDF via IA
-          </h3>
-          <p className="text-xs text-[#4b7a62] dark:text-green-400 mt-1">
-            Téléversez un cours ou un polycopié pour générer automatiquement des QCMs
-          </p>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 mt-4">
-            Importer un PDF <ArrowRight className="w-3.5 h-3.5" />
-          </span>
-        </Link>
-
-        <Link
-          href="/fr/admin/questions"
-          className="card p-6 border border-primary-200 dark:border-dark-border hover:shadow-lg transition-all group"
-        >
-          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 flex items-center justify-center mb-4">
-            <HelpCircle className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-[#1a2e25] dark:text-green-50 group-hover:text-primary-600 transition-colors">
-            Banque de questions & CRUD
-          </h3>
-          <p className="text-xs text-[#4b7a62] dark:text-green-400 mt-1">
-            Ajoutez manuellement des QCMs, cas cliniques et corrections médicales
-          </p>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-600 mt-4">
-            Gérer les questions <ArrowRight className="w-3.5 h-3.5" />
-          </span>
-        </Link>
-      </div>
+  return <div className="space-y-8 pb-16">
+    <header className="space-y-2">
+      <h1 className="text-3xl font-black">{en ? 'MedQCM administration' : 'Administration MedQCM'}</h1>
+      <p className="text-sm text-gray-600 dark:text-gray-300">
+        {en ? 'Live account, question, and subscription figures.' : 'Comptes, questions et abonnements enregistrés dans la base de données.'}
+      </p>
+    </header>
+    {error || !metrics ? <p role="alert" className="card p-5 border border-amber-300">
+      {en ? 'Live metrics are unavailable. Apply the pending admin migration before using this dashboard.' : 'Les chiffres réels sont indisponibles. Appliquez la migration administrateur en attente avant d’utiliser ce tableau de bord.'}
+    </p> : <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {cards.map(card => <div key={card.label} className="card p-5 border border-primary-100 dark:border-dark-border">
+        <p className="text-xs font-bold uppercase text-gray-500">{card.label}</p>
+        <strong className="text-3xl font-black text-[#1a2e25] dark:text-green-50">{card.value}</strong>
+      </div>)}
+    </div>}
+    <div className="grid sm:grid-cols-2 gap-4">
+      <Link href={`/${locale}/admin/subscriptions`} className="card p-6 border border-primary-200 hover:border-primary-500">
+        <h2 className="font-bold">{en ? 'Review subscription requests' : 'Examiner les demandes d’abonnement'}</h2>
+        <p className="text-sm text-gray-500 mt-2">{en ? 'Receipts remain private. Payment collection is closed until commercial terms and live acceptance are confirmed.' : 'Les reçus restent privés. Les paiements sont fermés jusqu’à validation des conditions commerciales et des tests en production.'}</p>
+      </Link>
+      <Link href={`/${locale}/admin/questions`} className="card p-6 border border-primary-200 hover:border-primary-500">
+        <h2 className="font-bold">{en ? 'Prepare QCM drafts' : 'Préparer les brouillons QCM'}</h2>
+        <p className="text-sm text-gray-500 mt-2">{en ? 'Drafts are private and do not appear in student quizzes before review and publication.' : 'Les brouillons restent privés et ne figurent pas dans les quiz étudiants avant relecture et publication.'}</p>
+      </Link>
     </div>
-  );
+  </div>;
 }

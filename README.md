@@ -1,56 +1,49 @@
-# 🩺 MedQCM — Plateforme Médicale Interactive & Gamifiée (Style Duolingo)
+# MedQCM
 
-MedQCM est une plateforme web moderne dédiée aux étudiants en médecine algériens (de la 1ère à la 7ème année + Préparation au Concours de Résidanat).
+MedQCM is a French/English medical QCM practice app for students in Algeria. It is in a **content pilot**, not a medically validated public launch. The current catalog contains six unreviewed sample questions. The year/module navigation is a draft pending confirmation against the applicable Oran University programme. No course PDFs are published.
 
-Inspirée par les mécanismes d'apprentissage interactifs de **Duolingo** et les plateformes médicales comme **CramQCM**, elle propose des parcours d'apprentissage sous forme de sentiers, des QCMs multi-sélection, un dépôt de polycopiés de cours PDF, des alertes de signalement d'erreurs et un système d'abonnement BaridiMob / CCP.
+## What works
 
----
+- Supabase email accounts, confirmation, login, recovery, profile metadata and password change.
+- Multi-select practice, server-scored results, saved attempts, resume/abandon, timed samples, history, statistics and review of missed questions. Running answer keys stay private.
+- Admin-only QCM drafts and a durable question-report review queue. Drafts are not published to students until medical review and a separate publishing workflow exist.
+- Private receipt submission, admin review and server-enforced subscription entitlements. **Payment collection is disabled** until recipient, terms and acceptance tests are confirmed.
+- Exam discovery for reviewed catalog content. The existing timed questions are labeled as samples, not official exams.
 
-## 🚀 Fonctionnalités Clés
+PDF publishing, medically reviewed QCMs, approved exams and paid subscriptions remain pending. Do not present draft navigation or sample content as an official faculty resource.
 
-### 🎓 Côté Étudiant
-- **Parcours d'apprentissage Gamifié (Snake Path)** : Nœuds d'entraînement tactiles 3D, coffres à trésor de gemmes, étapes d'évaluation clinique.
-- **Moteur de QCM Avancé** :
-  - Support des **questions à choix multiples** (cases à cocher multiples).
-  - Raccourcis clavier (touches `1` à `5` pour sélectionner, `Entrée` pour valider).
-  - Tiroir de célébration animé et **carillons Web Audio API** natifs.
-  - Bouton **« Signaler une erreur »** intégré pour notifier directement les administrateurs.
-- **Dépôt des Cours (Digital Library)** : Téléchargement direct des polycopiés PDF officiels classés par année et module.
-- **HUD Gamification** : Flammes de régularité 🔥, Gemmes médicales 💎, Vies ❤️, Rang de ligue.
-- **Profil Utilisateur Complet** : Édition du nom, date de naissance, faculté de médecine (Alger, Oran, Constantine, etc.), année d'étude et personnalisation d'avatar.
-- **Abonnement Simple & Transparent** : 1er module gratuit, paiement BaridiMob / CCP avec e-mail de réception `medqcmpay@gmail.com` copiable en 1 clic.
+## Stack
 
-### 🛡️ Côté Administrateur
-- **Gestion des Validations de Paiement** : Suivi des transactions BaridiMob avec lien de recherche instantanée sur Gmail.
-- **Dépôt des Polycopiés PDF** : Upload de fichiers de cours par année/module + raccourci de génération automatique de QCMs via IA.
-- **Modération des Signalements** : File d'attente des erreurs de questions signalées par les étudiants avec actions de correction rapide.
-- **Banque de QCMs** : Interface de création, édition et organisation des questions.
+Next.js 16, React 19, TypeScript, Tailwind CSS 4, `next-intl` and Supabase Auth/Postgres/Storage. Supabase SQL migrations are the database source of truth; the old Drizzle scaffold was removed.
 
----
+## Local setup
 
-## 🛠️ Stack Technologique
+```sh
+git clone https://github.com/hitokiribatosai/MedQcm.git
+cd MedQcm
+npm ci
+```
 
-- **Framework** : [Next.js 16 (App Router)](https://nextjs.org/) + TypeScript
-- **Styling** : [Tailwind CSS v4](https://tailwindcss.com/) + Boutons tactiles 3D Duolingo
-- **Base de données & Auth** : [Supabase](https://supabase.com/) + [Drizzle ORM](https://orm.drizzle.team/)
-- **Internationalisation** : [next-intl](https://next-intl-docs.vercel.app/) (Français / Anglais)
-- **Audio** : Web Audio API HTML5 natif (sans dépendance externe)
-- **Icônes** : [Lucide React](https://lucide.dev/)
+Create `.env.local` with the project's **public** Supabase URL and publishable/anon key (see `lib/supabase/`). Never commit service-role keys or credentials. Apply the numbered SQL migrations in `supabase/migrations/` to a dedicated Supabase project in order; consult [the handoff](docs/AI_HANDOFF.md) before touching an existing production database, where several migrations were already applied manually.
 
----
-
-## 💻 Démarrage Rapide en Local
-
-```bash
-# 1. Cloner le dépôt
-git clone https://github.com/YOUR_USERNAME/MedQCM.git
-cd MedQCM
-
-# 2. Installer les dépendances
-npm install
-
-# 3. Lancer le serveur de développement
+```sh
 npm run dev
 ```
 
-Ouvrez [http://localhost:3000/fr](http://localhost:3000/fr) dans votre navigateur.
+Open `http://localhost:3000/fr` or `/en`.
+
+## Verification
+
+```sh
+npx tsc --noEmit
+npm run lint -- --quiet
+npx next build --webpack
+node --experimental-strip-types --test tests/auth-policy.test.mjs tests/quiz-engine.test.mjs
+node tests/database/recovery-payments.mjs
+node tests/database/learning-progress.mjs
+node tests/database/admin-content.mjs
+```
+
+The database tests use `@electric-sql/pglite` from dev dependencies. Start the built server and set `TEST_APP_URL` to run `tests/auth-routes.test.mjs`. The current Cloudflare preview is [app.medqcm.workers.dev](https://app.medqcm.workers.dev); [Vercel](https://qcmmed.vercel.app) is a second deployment. Check the deployed revision before interpreting either as current.
+
+For rollout status, accepted limitations and next steps, read [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) and the [launch checklist](docs/LAUNCH_CHECKLIST.md).

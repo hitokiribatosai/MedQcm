@@ -4,25 +4,26 @@ import { BookOpen, Star, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react
 
 export default async function YearsIndexPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const en = locale === 'en';
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-primary-100 dark:border-dark-border pb-6">
         <div>
           <span className="badge-free mb-2 uppercase text-[11px] font-bold tracking-wider">
-            Parcours de révision en préparation
+            {en ? 'Study paths in preparation' : 'Parcours de révision en préparation'}
           </span>
           <h1 className="text-3xl font-extrabold text-[#1a2e25] dark:text-green-50">
-            Années d&apos;Études & Résidanat
+            {en ? 'Years of study & residency' : 'Années d’Études & Résidanat'}
           </h1>
           <p className="text-sm text-[#4b7a62] dark:text-green-400 mt-1">
-            Sélectionnez votre année d&apos;étude pour explorer les matières et modules de révision.
+            {en ? 'Choose your year to explore the draft subjects and modules.' : 'Sélectionnez votre année d’étude pour explorer les matières et modules provisoires.'}
           </p>
         </div>
 
         <Link href={`/${locale}/subscribe`} className="btn-primary self-start sm:self-auto gap-2">
           <Sparkles className="w-4 h-4 text-accent-300" />
-          Offres prévues
+          {en ? 'Planned offers' : 'Offres prévues'}
         </Link>
       </div>
 
@@ -33,11 +34,11 @@ export default async function YearsIndexPage({ params }: { params: Promise<{ loc
             <CheckCircle2 className="w-4 h-4" />
           </div>
           <p className="text-xs sm:text-sm text-[#2d523f] dark:text-green-200">
-            <strong>Questions exemples :</strong> Quelques modules proposent déjà des QCMs de démonstration. Le programme et les contenus d’Oran restent à valider.
+            <strong>{en ? 'Sample questions:' : 'Questions exemples :'}</strong> {en ? 'A few modules have demonstration QCMs. The Oran curriculum and content still need validation.' : 'Quelques modules proposent des QCMs de démonstration. Le programme et les contenus d’Oran restent à valider.'}
           </p>
         </div>
         <Link href={`/${locale}/subscribe`} className="text-xs font-bold text-primary-700 hover:underline shrink-0 dark:text-primary-400">
-          Voir les offres prévues →
+          {en ? 'View planned offers' : 'Voir les offres prévues'} →
         </Link>
       </div>
 
@@ -59,7 +60,7 @@ export default async function YearsIndexPage({ params }: { params: Promise<{ loc
             >
               {isSpecial && (
                 <div className="absolute -top-3 right-5 bg-gradient-to-r from-accent-500 to-amber-500 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow">
-                  Concours Classant
+                  {en ? 'Residency exam' : 'Concours classant'}
                 </div>
               )}
 
@@ -74,7 +75,7 @@ export default async function YearsIndexPage({ params }: { params: Promise<{ loc
                   </div>
 
                   <span className="badge-free text-[11px]">
-                    Parcours en préparation
+                    {en ? 'Path in preparation' : 'Parcours en préparation'}
                   </span>
                 </div>
 
@@ -106,10 +107,10 @@ export default async function YearsIndexPage({ params }: { params: Promise<{ loc
               {/* Footer */}
               <div className="mt-6 pt-4 border-t border-primary-100 dark:border-dark-border flex items-center justify-between">
                 <span className="text-xs font-semibold text-[#4b7a62] dark:text-green-400">
-                  {totalModules} modules proposés
+                  {totalModules} {en ? 'draft modules' : 'modules proposés'}
                 </span>
                 <span className="text-xs font-bold text-primary-600 dark:text-primary-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                  Accéder <ArrowRight className="w-3.5 h-3.5" />
+                  {en ? 'Explore' : 'Accéder'} <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </Link>

@@ -7,6 +7,6 @@ export default async function ResetPasswordPage({ params }: { params: Promise<{ 
   await requireUser(locale);
   return <main className="max-w-md mx-auto p-8 my-12 card">
     <PasswordForm />
-    <Link className="block mt-6" href={`/${locale}/dashboard`}>Retour au tableau de bord</Link>
+    <Link className="block mt-6" href={`/${locale}/dashboard`}>{locale === 'en' ? 'Back to dashboard' : 'Retour au tableau de bord'}</Link>
   </main>;
 }

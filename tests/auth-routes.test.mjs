@@ -41,3 +41,11 @@ test('subscription API rejects foreign origins and unsigned callers', { skip: !o
   assert.equal((await fetch(origin + '/api/subscriptions', {method:'POST',headers:{origin:'https://evil.test','content-type':'application/json'},body:'{}'})).status,403);
   assert.equal((await fetch(origin + '/api/subscriptions', {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status,401);
 });
+
+test('question draft and report APIs reject unsigned and foreign-origin requests', { skip: !origin }, async () => {
+  for (const path of ['/api/admin/questions', '/api/reports']) {
+    assert.ok([401, 403].includes((await fetch(origin + path)).status), path);
+    assert.equal((await fetch(origin + path, {method:'POST',headers:{origin:'https://evil.test','content-type':'application/json'},body:'{}'})).status,403, path);
+    assert.ok([401, 403].includes((await fetch(origin + path, {method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'})).status), path);
+  }
+});

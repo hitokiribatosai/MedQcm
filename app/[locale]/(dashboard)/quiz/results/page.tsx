@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/server";
 import { isCorrect, score } from "@/lib/quiz/engine";
 import type { Attempt } from "@/lib/quiz/types";
+import ReportQuestionButton from '@/components/quiz/ReportQuestionButton';
 export default async function ResultsPage({
   params,
   searchParams,
@@ -100,6 +101,7 @@ export default async function ResultsPage({
             </div>
           ))}
           <p>{q.explanation}</p>
+          <ReportQuestionButton attemptId={attempt.id} questionId={q.id} en={en} />
         </article>
       ))}
     </section>

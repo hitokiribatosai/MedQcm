@@ -1,0 +1,27 @@
+name: Verify MedQCM
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint -- --quiet
+      - run: node --experimental-strip-types --test tests/auth-policy.test.mjs tests/quiz-engine.test.mjs
+      - run: node tests/database/recovery-payments.mjs
+      - run: node tests/database/learning-progress.mjs
+      - run: node tests/database/admin-content.mjs
+      - run: npx next build --webpack
