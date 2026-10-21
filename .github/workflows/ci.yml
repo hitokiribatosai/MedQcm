@@ -2,7 +2,7 @@ name: Verify MedQCM
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/architecture-foundation]
   pull_request:
 
 jobs:

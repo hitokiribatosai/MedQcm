@@ -1,5 +1,7 @@
 name: Disposable staging acceptance
 on:
+  push:
+    branches: [codex/architecture-foundation]
   pull_request:
   workflow_dispatch:
 permissions:
