@@ -1,30 +1,37 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { SUBSCRIPTION_PRICING } from "@/lib/config/pricing";
+import { useCurriculum } from "@/lib/content/client";
+import type { Offer, Grant } from "@/lib/content/types";
+type Coverage = {
+  scope: string;
+  study_year: number | null;
+  module_id: string | null;
+  offer_title: string;
+  starts_at: string;
+  ends_at: string;
+  terms: string;
+};
 type Receipt = {
   id: string;
-  user_id: string;
   plan: string;
   amount: number;
   status: string;
-  created_at: string;
+  coverage: Coverage | null;
   transaction_reference: string;
   note: string;
   admin_note: string;
+  created_at: string;
 };
 type State = {
   userId: string;
   admin: boolean;
-  config: {
-    accepting_payments: boolean;
-    instructions: string;
-    annual_days: number;
-    semester_days: number;
-  };
+  config: { accepting_payments: boolean; instructions: string };
   requests: Receipt[];
-  entitlement: { expires_at: string } | null;
+  offers: Offer[];
+  grants: Grant[];
+  managedGrants: Grant[];
 };
 export default function SubscriptionPanel({
   admin = false,
@@ -32,31 +39,41 @@ export default function SubscriptionPanel({
   admin?: boolean;
 }) {
   const en = useLocale() === "en";
+  const { data: curriculum } = useCurriculum();
   const [state, setState] = useState<State | null>(null),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
-  const [plan, setPlan] = useState<"annual" | "semester">("annual"),
+    [busy, setBusy] = useState(false),
+    [offset, setOffset] = useState(0),
+    [status, setStatus] = useState("pending");
+  const [offerId, setOfferId] = useState(""),
+    [year, setYear] = useState(""),
+    [moduleId, setModuleId] = useState(""),
     [reference, setReference] = useState(""),
     [note, setNote] = useState(""),
+    [reviewNote, setReviewNote] = useState(""),
     [file, setFile] = useState<File | null>(null),
-    [reviewNote, setReviewNote] = useState("");
+    [proof, setProof] = useState("");
   const [hasUpload, setHasUpload] = useState(false);
-  const form = useRef<HTMLFormElement | null>(null);
-  const [proofLink, setProofLink] = useState<string | null>(null);
-  const upload = useRef<{ id: string; path: string } | null>(null);
-  async function load() {
-    const response = await fetch("/api/subscriptions", { cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error);
-    setState(data);
-  }
+  const uploaded = useRef<{ id: string; path: string } | null>(null);
+  const offer = state?.offers.find((o) => o.id === offerId && o.active);
+  const load = useCallback(async () => {
+    const r = await fetch(
+      `/api/subscriptions?offset=${offset}&status=${status}`,
+      { cache: "no-store" },
+    );
+    const d = await r.json();
+    if (!r.ok) throw Error(d.error);
+    setState(d);
+  }, [offset, status]);
   useEffect(() => {
     let active = true;
-    fetch("/api/subscriptions", { cache: "no-store" })
+    fetch(`/api/subscriptions?offset=${offset}&status=${status}`, {
+      cache: "no-store",
+    })
       .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw Error(data.error);
-        if (active) setState(data);
+        const d = await r.json();
+        if (!r.ok) throw Error(d.error);
+        if (active) setState(d);
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -64,84 +81,23 @@ export default function SubscriptionPanel({
     return () => {
       active = false;
     };
-  }, []);
+  }, [offset, status]);
   async function action(body: object) {
-    const response = await fetch("/api/subscriptions", {
+    const r = await fetch("/api/subscriptions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error);
-    return data;
+    const d = await r.json();
+    if (!r.ok) throw Error(d.error);
+    return d;
   }
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    if (busy || !state || !file) return;
-    setBusy(true);
-    setError("");
-    try {
-      if (
-        !["image/jpeg", "image/png", "application/pdf"].includes(file.type) ||
-        file.size > 5 * 1024 * 1024 ||
-        !file.size
-      )
-        throw Error(
-          en
-            ? "Use a JPG, PNG or PDF up to 5 MB."
-            : "Utilisez un JPG, PNG ou PDF de 5 Mo maximum.",
-        );
-      if (!upload.current) {
-        const id = crypto.randomUUID(),
-          extension =
-            file.type === "application/pdf"
-              ? "pdf"
-              : file.type === "image/png"
-                ? "png"
-                : "jpg";
-        const path = `${state.userId}/${id}/receipt.${extension}`;
-        const { error } = await createClient()
-          .storage.from("payment-receipts")
-          .upload(path, file, { upsert: false, contentType: file.type });
-        if (error)
-          throw Error(
-            en ? "Receipt upload failed." : "Échec du téléversement du reçu.",
-          );
-        upload.current = { id, path };
-        setHasUpload(true);
-      }
-      await action({
-        action: "submit",
-        ...upload.current,
-        plan,
-        reference,
-        note,
-      });
-      upload.current = null;
-      setHasUpload(false);
-      setFile(null);
-      setReference("");
-      setNote("");
-      form.current?.reset();
-      await load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function review(receipt: Receipt, decision: "approved" | "rejected") {
+  async function run(work: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
     setError("");
     try {
-      await action({
-        action: "review",
-        id: receipt.id,
-        decision,
-        note: reviewNote,
-      });
-      setReviewNote("");
+      await work();
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
@@ -149,29 +105,40 @@ export default function SubscriptionPanel({
       setBusy(false);
     }
   }
-  async function proof(id: string) {
-    try {
-      const data = await action({ action: "proof", id });
-      setProofLink(data.signedUrl);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
-    }
-  }
   if (!state)
     return (
-      <section className="card p-6">
+      <section className="card p-5">
         <p role={error ? "alert" : "status"}>
           {error || (en ? "Loading…" : "Chargement…")}
         </p>
-        <button onClick={() => load().catch((e) => setError(e.message))}>
+        <button className="btn-secondary" onClick={() => void run(load)}>
           {en ? "Retry" : "Réessayer"}
         </button>
       </section>
     );
   const closed =
     !state.config.accepting_payments || !state.config.instructions.trim();
+  const coverage = (c: {
+    scope: string;
+    study_year: number | null;
+    module_id: string | null;
+  }) =>
+    c.scope === "year"
+      ? `${en ? "Year" : "Année"} ${c.study_year}`
+      : c.scope === "all_years"
+        ? en
+          ? "Medicine years 1–7"
+          : "Médecine années 1–7"
+        : c.scope === "module"
+          ? curriculum.modules.find((m) => m.id === c.module_id)?.title ||
+            c.module_id
+          : c.scope === "residency"
+            ? "Résidanat"
+            : en
+              ? "Previous subscription"
+              : "Ancien abonnement";
   return (
-    <section className="max-w-5xl mx-auto space-y-6">
+    <section className="space-y-6 max-w-5xl">
       <h1 className="text-3xl font-bold">
         {admin
           ? en
@@ -182,85 +149,232 @@ export default function SubscriptionPanel({
             : "Abonnements"}
       </h1>
       {error && (
-        <p role="alert" className="text-red-600">
+        <p role="alert" className="card p-4 text-red-700">
           {error}
-        </p>
-      )}
-      {proofLink && (
-        <p>
-          <a
-            className="underline"
-            href={proofLink}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {en
-              ? "Open receipt (link expires in 60 seconds)"
-              : "Ouvrir le reçu (lien valable 60 secondes)"}
-          </a>
         </p>
       )}
       {!admin && (
         <>
           {closed ? (
-            <p className="card p-6 border-2 border-amber-300">
+            <p className="card p-5 border-amber-500">
               {en
-                ? "Payments are closed. Do not transfer money. Recipient details and plan durations still need confirmation."
-                : "Les paiements sont fermés. N’effectuez aucun transfert. Les coordonnées et les durées des offres restent à confirmer."}
+                ? "Payments are closed. Do not transfer money."
+                : "Les paiements sont fermés. N’effectuez aucun transfert."}
             </p>
           ) : (
-            <p className="card p-6 whitespace-pre-wrap">
+            <p className="card p-5 whitespace-pre-wrap">
               {state.config.instructions}
             </p>
           )}
-          {state.entitlement && (
+          <h2 className="text-xl font-bold">
+            {en ? "Your access" : "Vos accès"}
+          </h2>
+          {!state.grants.length && (
             <p>
-              {en ? "Subscription expires" : "Expiration de l’abonnement"}:{" "}
-              {new Date(state.entitlement.expires_at).toLocaleString()}
+              {en
+                ? "No purchased access yet. Free sample modules remain available."
+                : "Aucun accès acheté. Les modules exemples gratuits restent disponibles."}
             </p>
           )}
+          {state.grants.map((g) => (
+            <article className="card p-4" key={g.id}>
+              <strong>{coverage(g)}</strong>
+              <p>
+                {new Date(g.starts_at).toLocaleDateString()} →{" "}
+                {new Date(g.ends_at).toLocaleDateString()}
+                {g.revoked_at
+                  ? ` · ${en ? "Revoked" : "Révoqué"}`
+                  : new Date(g.ends_at) <= new Date()
+                    ? ` · ${en ? "Expired" : "Expiré"}`
+                    : new Date(g.starts_at) > new Date()
+                      ? ` · ${en ? "Starts later" : "À venir"}`
+                      : ""}
+              </p>
+            </article>
+          ))}
           <div className="grid sm:grid-cols-2 gap-4">
-            {Object.values(SUBSCRIPTION_PRICING).map((p) => (
-              <article key={p.id} className="card p-5">
-                <h2>{p.name}</h2>
-                <strong className="text-2xl">{p.formattedPrice}</strong>
-                <p>
-                  {closed
-                    ? en
-                      ? "Planned offer"
-                      : "Offre prévue"
-                    : `${p.id === "annual" ? state.config.annual_days : state.config.semester_days} ${en ? "days" : "jours"}`}
-                </p>
-              </article>
-            ))}
+            {state.offers
+              .filter((o) => o.active)
+              .map((o) => (
+                <article className="card p-5 space-y-2" key={o.id}>
+                  <h2 className="font-bold">{o.title}</h2>
+                  <strong>{o.amount} DA</strong>
+                  <p>
+                    {new Date(o.starts_at).toLocaleDateString()} →{" "}
+                    {new Date(o.ends_at).toLocaleDateString()}
+                  </p>
+                  <p>{o.terms}</p>
+                </article>
+              ))}
           </div>
+          {!state.offers.some((o) => o.active) && (
+            <p>
+              {en
+                ? "Offers are being prepared."
+                : "Les offres sont en préparation."}
+            </p>
+          )}
           {!closed && (
-            <form ref={form} onSubmit={submit} className="card p-6 space-y-4">
-              <fieldset
-                disabled={
-                  busy ||
-                  hasUpload ||
-                  state.requests.some((r) => r.status === "pending")
-                }
-                className="space-y-4"
-              >
+            <form
+              className="card p-5 space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void run(async () => {
+                  if (!offer || !file)
+                    throw Error(
+                      en
+                        ? "Choose an offer and receipt."
+                        : "Choisissez une offre et un reçu.",
+                    );
+                  if (
+                    !["image/jpeg", "image/png", "application/pdf"].includes(
+                      file.type,
+                    ) ||
+                    !file.size ||
+                    file.size > 5242880
+                  )
+                    throw Error("JPG / PNG / PDF, 5 Mo maximum");
+                  if (!uploaded.current) {
+                    const id = crypto.randomUUID(),
+                      ext =
+                        file.type === "application/pdf"
+                          ? "pdf"
+                          : file.type === "image/png"
+                            ? "png"
+                            : "jpg",
+                      path = `${state.userId}/${id}/receipt.${ext}`;
+                    const { error } = await createClient()
+                      .storage.from("payment-receipts")
+                      .upload(path, file, {
+                        upsert: false,
+                        contentType: file.type,
+                      });
+                    if (error)
+                      throw Error(
+                        en
+                          ? "Receipt upload failed."
+                          : "Échec du dépôt du reçu.",
+                      );
+                    uploaded.current = { id, path };
+                    setHasUpload(true);
+                  }
+                  await action({
+                    action: "submit",
+                    ...uploaded.current,
+                    offer: offer.id,
+                    year: offer.scope === "year" ? Number(year) : null,
+                    module: offer.scope === "module" ? moduleId : null,
+                    reference,
+                    note,
+                  });
+                  uploaded.current = null;
+                  setHasUpload(false);
+                  setFile(null);
+                  setReference("");
+                  setNote("");
+                });
+              }}
+            >
+              <fieldset disabled={busy} className="space-y-3">
                 <label className="block">
-                  {en ? "Plan" : "Offre"}
+                  {en ? "Offer" : "Offre"}
                   <select
-                    className="input"
-                    value={plan}
-                    onChange={(e) =>
-                      setPlan(e.target.value as "annual" | "semester")
-                    }
+                    className="input block w-full"
+                    required
+                    value={offerId}
+                    onChange={(e) => {
+                      setOfferId(e.target.value);
+                      setYear("");
+                      setModuleId("");
+                    }}
                   >
-                    <option value="annual">4 500 DA</option>
-                    <option value="semester">2 800 DA</option>
+                    <option value="">—</option>
+                    {state.offers
+                      .filter((o) => o.active)
+                      .map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.title} · {o.amount} DA
+                        </option>
+                      ))}
                   </select>
+                </label>
+                {offer?.scope === "year" && (
+                  <label className="block">
+                    {en ? "Year to unlock" : "Année à débloquer"}
+                    <select
+                      className="input block"
+                      value={year}
+                      required
+                      onChange={(e) => setYear(e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {[
+                        ...new Set(
+                          curriculum.modules
+                            .filter(
+                              (m) =>
+                                m.release_id === offer.release_id &&
+                                m.study_year <= 7,
+                            )
+                            .map((m) => m.study_year),
+                        ),
+                      ]
+                        .sort((a, b) => a - b)
+                        .map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                )}
+                {offer?.scope === "module" && (
+                  <label className="block">
+                    Module
+                    <select
+                      className="input block"
+                      value={moduleId}
+                      required
+                      onChange={(e) => setModuleId(e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {curriculum.modules
+                        .filter((m) => m.release_id === offer.release_id)
+                        .map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.study_year} · {m.title}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                )}
+                {offer && (
+                  <p>
+                    {offer.amount} DA ·{" "}
+                    {new Date(offer.starts_at).toLocaleDateString()} →{" "}
+                    {new Date(offer.ends_at).toLocaleDateString()} ·{" "}
+                    {en
+                      ? "Changing your profile year does not change purchased access."
+                      : "Modifier votre année de profil ne modifie pas les accès achetés."}
+                  </p>
+                )}
+                <label className="block">
+                  {en
+                    ? "Receipt (JPG, PNG, PDF; 5 MB)"
+                    : "Reçu (JPG, PNG, PDF ; 5 Mo)"}
+                  <input
+                    className="input block"
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf"
+                    required
+                    disabled={hasUpload}
+                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  />
                 </label>
                 <label className="block">
                   {en ? "Transaction reference" : "Référence de transaction"}
                   <input
-                    className="input"
+                    className="input block w-full"
                     required
                     minLength={3}
                     maxLength={200}
@@ -269,110 +383,164 @@ export default function SubscriptionPanel({
                   />
                 </label>
                 <label className="block">
-                  {en
-                    ? "Receipt (JPG, PNG, PDF; 5 MB)"
-                    : "Reçu (JPG, PNG, PDF ; 5 Mo)"}
-                  <input
-                    type="file"
-                    required={!file}
-                    accept="image/jpeg,image/png,application/pdf"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                </label>
-                <label className="block">
-                  {en ? "Note" : "Remarque"}
+                  Note
                   <textarea
-                    className="input"
+                    className="input block w-full"
                     maxLength={2000}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                   />
                 </label>
+                <button className="btn-primary">
+                  {en
+                    ? "Submit for manual verification"
+                    : "Soumettre pour vérification manuelle"}
+                </button>
               </fieldset>
-              <button
-                className="btn-primary"
-                disabled={
-                  busy || state.requests.some((r) => r.status === "pending")
-                }
-              >
-                {busy
-                  ? "…"
-                  : hasUpload
-                    ? en
-                      ? "Retry request"
-                      : "Réessayer la demande"
-                    : en
-                      ? "Submit receipt"
-                      : "Envoyer le reçu"}
-              </button>
             </form>
           )}
         </>
       )}
       {admin && (
-        <label className="block">
-          {en ? "Review note" : "Note de validation"}
-          <textarea
-            className="input"
-            maxLength={2000}
-            value={reviewNote}
-            onChange={(e) => setReviewNote(e.target.value)}
-          />
-        </label>
+        <>
+          <label className="block">
+            {en ? "Request status" : "État des demandes"}
+            <select
+              className="input block"
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setOffset(0);
+              }}
+            >
+              <option value="pending">{en ? "Pending" : "En attente"}</option>
+              <option value="approved">{en ? "Approved" : "Approuvées"}</option>
+              <option value="rejected">{en ? "Rejected" : "Rejetées"}</option>
+            </select>
+          </label>
+          <label className="block">
+            {en ? "Review note" : "Note de vérification"}
+            <textarea
+              className="input block w-full"
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              maxLength={2000}
+            />
+          </label>
+        </>
+      )}
+      {proof && (
+        <p>
+          <a
+            className="underline"
+            href={proof}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {en
+              ? "Download receipt (60-second link)"
+              : "Télécharger le reçu (lien de 60 secondes)"}
+          </a>
+        </p>
       )}
       <h2 className="text-xl font-bold">
-        {admin
-          ? en
-            ? "Pending requests (oldest 100)"
-            : "Demandes en attente (100 plus anciennes)"
-          : en
-            ? "Recent requests"
-            : "Demandes récentes"}
+        {en ? "Payment requests" : "Demandes de paiement"}
       </h2>
       {!state.requests.length && (
-        <p>{en ? "No requests yet." : "Aucune demande."}</p>
+        <p>{en ? "No requests." : "Aucune demande."}</p>
       )}
-      <ul className="space-y-4">
-        {state.requests.map((r) => (
-          <li key={r.id} className="card p-5 space-y-2">
-            <p>
-              {r.plan} · {r.amount} DA · {r.status}
-            </p>
-            <p>
-              {r.transaction_reference} ·{" "}
-              {new Date(r.created_at).toLocaleString()}
-            </p>
-            {admin && (
-              <p className="break-all">
-                {en ? "Account" : "Compte"}: {r.user_id}
+      {state.requests.map((r) => (
+        <article className="card p-4 space-y-2" key={r.id}>
+          <strong>
+            {r.coverage?.offer_title || r.plan} · {r.amount} DA · {r.status}
+          </strong>
+          {r.coverage && (
+            <>
+              <p>
+                {coverage(r.coverage)} ·{" "}
+                {new Date(r.coverage.ends_at).toLocaleDateString()}
               </p>
-            )}
-            <p>{r.note}</p>
-            {r.admin_note && <p>{r.admin_note}</p>}
-            <button className="btn-secondary" onClick={() => proof(r.id)}>
-              {en ? "View private receipt" : "Voir le reçu privé"}
-            </button>
-            {admin && r.status === "pending" && (
-              <div className="flex gap-3">
+              <p>{r.coverage.terms}</p>
+            </>
+          )}
+          <p>
+            {r.transaction_reference} · {r.note}
+          </p>
+          <p>{r.admin_note}</p>
+          <button
+            className="btn-secondary"
+            disabled={busy}
+            onClick={() =>
+              void run(async () =>
+                setProof(
+                  (await action({ action: "proof", id: r.id })).signedUrl,
+                ),
+              )
+            }
+          >
+            {en ? "View receipt" : "Voir le reçu"}
+          </button>
+          {admin && r.status === "pending" && (
+            <div className="flex gap-3">
+              {(["approved", "rejected"] as const).map((decision) => (
                 <button
-                  className="btn-primary"
-                  disabled={busy}
-                  onClick={() => review(r, "approved")}
-                >
-                  {en ? "Approve" : "Approuver"}
-                </button>
-                <button
+                  key={decision}
                   className="btn-secondary"
                   disabled={busy}
-                  onClick={() => review(r, "rejected")}
+                  onClick={() =>
+                    void run(async () => {
+                      await action({
+                        action: "review",
+                        id: r.id,
+                        decision,
+                        note: reviewNote,
+                      });
+                    })
+                  }
                 >
-                  {en ? "Reject" : "Refuser"}
+                  {decision === "approved"
+                    ? en
+                      ? "Approve access"
+                      : "Approuver l’accès"
+                    : en
+                      ? "Reject"
+                      : "Rejeter"}
                 </button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              ))}
+            </div>
+          )}
+        </article>
+      ))}
+      <nav className="flex gap-4">
+        <button
+          className="btn-secondary"
+          disabled={offset === 0 || busy}
+          onClick={() => setOffset(Math.max(0, offset - 50))}
+        >
+          {en ? "Previous" : "Précédent"}
+        </button>
+        <button
+          className="btn-secondary"
+          disabled={state.requests.length < 50 || busy}
+          onClick={() => setOffset(offset + 50)}
+        >
+          {en ? "Next" : "Suivant"}
+        </button>
+      </nav>
+      {admin && state.managedGrants.length > 0 && (
+        <details>
+          <summary>
+            {en
+              ? "Recent access grant IDs (for revocation)"
+              : "Identifiants des droits récents (pour révocation)"}
+          </summary>
+          {state.managedGrants.map((g) => (
+            <p className="break-all text-sm" key={g.id}>
+              {g.id} · {coverage(g)} · {g.ends_at}
+            </p>
+          ))}
+        </details>
+      )}
     </section>
   );
 }

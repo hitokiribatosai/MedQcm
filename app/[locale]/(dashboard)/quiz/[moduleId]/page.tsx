@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getModuleData } from "@/lib/data/curriculum-metadata";
+
 import {
   isCorrect,
   parseMode,
@@ -18,10 +18,13 @@ export default function QuizPage() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const params = useSearchParams(),
     router = useRouter();
-  const selectedModule = getModuleData(moduleId)?.module;
   const mode = parseMode(params.get("mode"));
-  const [catalogEntry, setCatalogEntry] = useState<{ module_name: string; question_count: number; reviewed: boolean } | null>(null);
-  const available = catalogEntry?.question_count ?? selectedModule?.availableQuestionCount ?? 0;
+  const [catalogEntry, setCatalogEntry] = useState<{
+    module_name: string;
+    question_count: number;
+    reviewed: boolean;
+  } | null>(null);
+  const available = catalogEntry?.question_count ?? 0;
   const [count, setCount] = useState(() =>
     questionCount(params.get("count"), available),
   );
@@ -51,17 +54,28 @@ export default function QuizPage() {
   useEffect(() => {
     let active = true;
     fetch("/api/modules")
-      .then((response) => response.ok ? response.json() : [])
-      .then((rows: ({ module_id: string; module_name: string; question_count: number; reviewed: boolean })[]) => {
-        if (!active) return;
-        const entry = rows.find((row) => row.module_id === moduleId);
-        if (entry) {
-          setCatalogEntry(entry);
-          setCount(questionCount(params.get("count"), entry.question_count));
-        }
-      })
+      .then((response) => (response.ok ? response.json() : []))
+      .then(
+        (
+          rows: {
+            module_id: string;
+            module_name: string;
+            question_count: number;
+            reviewed: boolean;
+          }[],
+        ) => {
+          if (!active) return;
+          const entry = rows.find((row) => row.module_id === moduleId);
+          if (entry) {
+            setCatalogEntry(entry);
+            setCount(questionCount(params.get("count"), entry.question_count));
+          }
+        },
+      )
       .catch(() => {});
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [moduleId, params]);
   useEffect(() => {
     if (resumeId && loadedId.current === resumeId) return;
@@ -243,17 +257,26 @@ export default function QuizPage() {
       </section>
     );
   if (resumeId && !attempt)
-    return <section className="card p-8 max-w-2xl mx-auto" role="status">
-      {error || (en ? "Loading your session…" : "Chargement de votre session…")}
-    </section>;
+    return (
+      <section className="card p-8 max-w-2xl mx-auto" role="status">
+        {error ||
+          (en ? "Loading your session…" : "Chargement de votre session…")}
+      </section>
+    );
   if (!attempt)
     return (
       <section className="card p-8 space-y-5 max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold">{catalogEntry?.module_name ?? selectedModule?.nameFr}</h1>
+        <h1 className="text-2xl font-bold">
+          {catalogEntry?.module_name ?? moduleId}
+        </h1>
         <p>
           {catalogEntry?.reviewed
-            ? en ? "Reviewed questions. Saved drafts resume after refresh." : "Questions relues. Les brouillons enregistrés reprennent après actualisation."
-            : en ? "Sample content — medical review pending. Saved drafts resume after refresh. Timed sample sessions are for testing, not official exams." : "Contenu exemple — revue médicale en attente. Les brouillons enregistrés reprennent après actualisation. Les sessions chronométrées exemples servent aux tests, pas aux examens officiels."}
+            ? en
+              ? "Reviewed questions. Saved drafts resume after refresh."
+              : "Questions relues. Les brouillons enregistrés reprennent après actualisation."
+            : en
+              ? "Sample content — medical review pending. Saved drafts resume after refresh. Timed sample sessions are for testing, not official exams."
+              : "Contenu exemple — revue médicale en attente. Les brouillons enregistrés reprennent après actualisation. Les sessions chronométrées exemples servent aux tests, pas aux examens officiels."}
         </p>
         <label className="block">
           {en ? "Questions" : "Questions"}
@@ -345,7 +368,12 @@ export default function QuizPage() {
   return (
     <section className="max-w-3xl mx-auto space-y-5 pb-10">
       <header className="flex justify-between">
-        <h1 className="font-bold">{attempt.module_name}{attempt.review_attempt ? ` · ${en ? "Mistakes review" : "Révision des erreurs"}` : ""}</h1>
+        <h1 className="font-bold">
+          {attempt.module_name}
+          {attempt.review_attempt
+            ? ` · ${en ? "Mistakes review" : "Révision des erreurs"}`
+            : ""}
+        </h1>
         <span>
           {index + 1} / {attempt.question_count}
           {remaining !== null

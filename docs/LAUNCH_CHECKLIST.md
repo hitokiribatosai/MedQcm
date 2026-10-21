@@ -1,5 +1,12 @@
 # MedQCM launch checklist
 
+## Architecture branch update — 2026-10-21
+
+The new implementation supersedes the earlier descriptions of browser-only PDF drafts, broad annual/semester access and draft-only QCM editing. It adds versioned publishing, scoped academic-period access, configured exams and private PDF scan/review workflows. Read [PROJECT_HANDOVER.md](../PROJECT_HANDOVER.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [OPERATIONS.md](OPERATIONS.md) for current implementation and rollout order.
+
+**This is not a production deployment claim.** New SQL, hosted operations and live acceptance must be verified independently. Collection stays closed; source curriculum, medical review, permitted documents and commercial/legal decisions remain pending. Entries below record earlier releases and historical checks.
+
+
 This is an acceptance checklist, not a claim that the site is ready for public or paid launch. Keep `payment_configuration.accepting_payments=false` until the payment items below pass. The six current QCMs are unreviewed samples and no course PDFs are published.
 
 ## Verified on 2026-10-06

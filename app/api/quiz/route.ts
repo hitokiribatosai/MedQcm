@@ -4,6 +4,11 @@ import { z } from "zod";
 const answerSchema = z.record(z.array(z.string().max(100)).max(20));
 const payload = z.discriminatedUnion("action", [
   z.object({
+    action: z.literal("startExam"),
+    id: z.string().uuid(),
+    exam: z.string().uuid(),
+  }),
+  z.object({
     action: z.literal("start"),
     id: z.string().uuid(),
     module: z.string().max(100),
@@ -53,36 +58,40 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid quiz request" }, { status: 400 });
   }
   const args =
-    body.action === "startReview"
-      ? { p_id: body.id, p_module: body.module, p_count: body.count }
-      : body.action === "start"
-      ? {
-          p_id: body.id,
-          p_module: body.module,
-          p_mode: body.mode,
-          p_count: body.count,
-          p_sample: body.sample ?? false,
-        }
-      : body.action === "save"
-        ? {
-            p_id: body.id,
-            p_answers: body.answers,
-            p_index: body.index,
-            p_revision: body.revision,
-          }
-        : body.action === "finish"
-          ? { p_id: body.id, p_answers: body.answers }
-          : { p_id: body.id };
+    body.action === "startExam"
+      ? { p_id: body.id, p_exam: body.exam }
+      : body.action === "startReview"
+        ? { p_id: body.id, p_module: body.module, p_count: body.count }
+        : body.action === "start"
+          ? {
+              p_id: body.id,
+              p_module: body.module,
+              p_mode: body.mode,
+              p_count: body.count,
+              p_sample: body.sample ?? false,
+            }
+          : body.action === "save"
+            ? {
+                p_id: body.id,
+                p_answers: body.answers,
+                p_index: body.index,
+                p_revision: body.revision,
+              }
+            : body.action === "finish"
+              ? { p_id: body.id, p_answers: body.answers }
+              : { p_id: body.id };
   const name =
-    body.action === "startReview"
-      ? "start_review_attempt"
-      : body.action === "start"
-      ? "start_training_attempt"
-      : body.action === "save"
-        ? "save_training_draft"
-        : body.action === "finish"
-          ? "finish_training_attempt"
-          : "abandon_training_attempt";
+    body.action === "startExam"
+      ? "start_configured_exam"
+      : body.action === "startReview"
+        ? "start_review_attempt"
+        : body.action === "start"
+          ? "start_training_attempt"
+          : body.action === "save"
+            ? "save_training_draft"
+            : body.action === "finish"
+              ? "finish_training_attempt"
+              : "abandon_training_attempt";
   const { data, error } = await supabase.rpc(name, args);
   if (error)
     return Response.json(

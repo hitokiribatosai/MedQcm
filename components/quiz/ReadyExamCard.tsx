@@ -1,63 +1,86 @@
 "use client";
-
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 export type ReadyExam = {
+  id: string;
   module_id: string;
   module_name: string;
   question_count: number;
-  requires_subscription: boolean;
+  duration_seconds: number;
+  max_attempts: number;
+  accessible: boolean;
 };
-
-export default function ReadyExamCard({ exam, locale }: { exam: ReadyExam; locale: string }) {
-  const en = locale === "en";
-  const router = useRouter();
-  const [count, setCount] = useState(Math.min(20, exam.question_count));
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const requestId = useRef<string | null>(null);
-
+export default function ReadyExamCard({
+  exam,
+  locale,
+}: {
+  exam: ReadyExam;
+  locale: string;
+}) {
+  const router = useRouter(),
+    en = locale === "en";
+  const id = useRef<string | null>(null);
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   async function start() {
     if (busy) return;
     setBusy(true);
     setError("");
-    requestId.current ??= crypto.randomUUID();
+    id.current ??= crypto.randomUUID();
     try {
-      const response = await fetch("/api/quiz", {
+      const r = await fetch("/api/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "start", id: requestId.current, module: exam.module_id,
-          mode: "exam", count, sample: false,
+          action: "startExam",
+          id: id.current,
+          exam: exam.id,
         }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      router.push(`/${locale}/quiz/${exam.module_id}?attempt=${data.id}`);
-    } catch {
-      setError(en ? "Could not start this exam. Check your access and try again." : "Impossible de commencer cet examen. Vérifiez votre accès et réessayez.");
+      const d = await r.json();
+      if (!r.ok) throw Error(d.error);
+      router.push(`/${locale}/quiz/${exam.module_id}?attempt=${d.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error");
       setBusy(false);
     }
   }
-
   return (
     <article className="card p-5 space-y-3">
       <h3 className="font-bold">{exam.module_name}</h3>
-      <p className="text-sm">{exam.question_count} {en ? "approved questions available" : "questions disponibles"}</p>
-      {exam.requires_subscription && <p className="text-sm">{en ? "Subscription required" : "Abonnement requis"}</p>}
-      <label className="block text-sm font-semibold">
-        {en ? "Questions in this session" : "Questions de cette session"}
-        <select className="input block mt-1" value={count} onChange={(event) => {
-          setCount(Number(event.target.value)); requestId.current = null;
-        }}>
-          {[...new Set([Math.min(10, exam.question_count), Math.min(20, exam.question_count), Math.min(40, exam.question_count), Math.min(100, exam.question_count)])].map((n) =>
-            <option key={n} value={n}>{n}</option>)}
-        </select>
-      </label>
-      <p className="text-xs">{en ? "90 seconds per question. Answers appear after submission." : "90 secondes par question. Les réponses apparaissent après validation."}</p>
-      <button className="btn-primary" disabled={busy} onClick={start}>{busy ? "…" : en ? "Start exam" : "Commencer l’examen"}</button>
-      {error && <p role="alert" className="text-red-600 text-sm">{error}</p>}
+      <p>
+        {exam.question_count} QCM · {exam.duration_seconds / 60} min
+      </p>
+      <p>
+        {exam.max_attempts
+          ? `${exam.max_attempts} ${en ? "attempts maximum" : "tentatives maximum"}`
+          : en
+            ? "Unlimited attempts"
+            : "Tentatives illimitées"}
+      </p>
+      <p>
+        {en
+          ? "Exact-set scoring; corrections after submission."
+          : "Barème exact ; corrections après validation."}
+      </p>
+      {exam.accessible ? (
+        <button
+          className="btn-primary"
+          disabled={busy}
+          onClick={() => void start()}
+        >
+          {busy ? "…" : en ? "Start exam" : "Commencer l’examen"}
+        </button>
+      ) : (
+        <Link
+          className="btn-secondary inline-flex"
+          href={`/${locale}/subscribe`}
+        >
+          {en ? "Subscription required" : "Abonnement requis"}
+        </Link>
+      )}
+      {error && <p role="alert">{error}</p>}
     </article>
   );
 }

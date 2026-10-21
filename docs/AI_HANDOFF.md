@@ -1,5 +1,12 @@
 # MedQCM continuation guide
 
+## Architecture branch update — 2026-10-21
+
+The new implementation supersedes the earlier descriptions of browser-only PDF drafts, broad annual/semester access and draft-only QCM editing. It adds versioned publishing, scoped academic-period access, configured exams and private PDF scan/review workflows. Read [PROJECT_HANDOVER.md](../PROJECT_HANDOVER.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [OPERATIONS.md](OPERATIONS.md) for current implementation and rollout order.
+
+**This is not a production deployment claim.** New SQL, hosted operations and live acceptance must be verified independently. Collection stays closed; source curriculum, medical review, permitted documents and commercial/legal decisions remain pending. Entries below record earlier releases and historical checks.
+
+
 Updated 2026-10-06. Read AGENTS.md and installed Next.js docs before editing. Never expose credentials or force-push.
 
 ## 2026-10-06 release-preparation update

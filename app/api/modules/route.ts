@@ -1,12 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
-
+import { json } from "@/lib/http/response";
+import type { Curriculum } from "@/lib/content/types";
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ error: "Sign in again" }, { status: 401 });
-  const { data, error } = await supabase.rpc("training_catalog_overview");
-  return Response.json(error ? { error: "Modules unavailable" } : data, {
-    status: error ? 503 : 200,
-    headers: { "Cache-Control": "private, no-store" },
-  });
+  const db = await createClient();
+  const {
+    data: { user },
+  } = await db.auth.getUser();
+  if (!user) return json({ error: "Sign in again" }, 401);
+  const { data, error } = await db.rpc("curriculum_overview");
+  return error
+    ? json({ error: "Modules unavailable" }, 503)
+    : json(
+        (data as Curriculum).modules.map((m) => ({
+          module_id: m.id,
+          module_name: m.title,
+          question_count: m.question_count,
+          reviewed: m.reviewed,
+        })),
+      );
 }

@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
@@ -24,4 +24,6 @@ jobs:
       - run: node tests/database/recovery-payments.mjs
       - run: node tests/database/learning-progress.mjs
       - run: node tests/database/admin-content.mjs
+      - run: node tests/database/architecture.mjs
+      - run: node --test tests/operations.test.mjs
       - run: npm run cf:build

@@ -1,5 +1,49 @@
 # MedQCM project handover
 
+## Current architecture implementation — 2026-10-21
+
+**Read this section before the historical snapshot below.** Development is on `codex/architecture-foundation`, based on `e9585d2`. The new schema and application are not yet verified on production; do not deploy the application before its three migrations. Payments remain closed and no medical content has been approved.
+
+The owner approved implementing the architecture, including curriculum/content publishing, learning integrity, scoped subscriptions, secure documents and operations. Supabase remains the backend; Cloudflare and Vercel remain the website hosts.
+
+### Implemented in this branch
+
+- Database-owned curriculum releases, stable year/module/course IDs, source verification and a draft Oran programme imported from existing navigation.
+- Versioned QCM draft → independent medical review → publication → revision/withdrawal. Six original questions remain samples; old private drafts are preserved. Completed attempt snapshots and scores remain unchanged, with withdrawal notices.
+- Reviewed exam definitions with total duration, question count, attempt limits and immutable rule snapshots. Existing autosave, conflict detection and history remain in place.
+- Fixed academic periods and immutable offers scoped to one year, all medicine years (excluding residency), one module, or residency. The student selects the scope before submitting private proof. Payment managers approve once, revoke with audit reasons, and cannot grant access by changing a profile year. No prices or commercial terms were invented and no paid offers are seeded.
+- Durable private PDF uploads with scan leases, retries, independent review and entitled short-lived downloads. Publication fails closed until a trusted scanner has attested the bytes. The scanner is implemented, not yet configured as a hosted service.
+- Separate staff capabilities, administrative audit records, mutation budgets, readiness monitoring, encrypted database/file backup and restore tooling. Scheduled operations are disabled until secrets and owner notifications are configured.
+- Database-driven student screens and administrative workspaces for curriculum, content, exams, offers and audit; historical exposure and current question counts are shown separately in statistics.
+
+### Verification and deployment status
+
+The four PGlite suites, unit/operations tests, TypeScript, lint and OpenNext build are the local acceptance checks. The new Playwright workflow uses disposable Supabase containers and synthetic accounts; check its actual GitHub result before calling browser integration accepted. PGlite mocks managed Auth/Storage schemas; the script tests mock CLI exports/scanning binaries and do not establish an actual disaster-recovery drill. Production acceptance has not been repeated during this implementation.
+
+The new migrations are `202610200001_curriculum_versions.sql`, `202610200002_access_exams.sql`, and `202610200003_documents_operations.sql`. Historical production migrations through `202610050002` were manually applied. Inspect live schema and preserve a restorable backup before applying new SQL. Never blindly replay the historical migration directory against production.
+
+### Continue here
+
+1. Run/check feature-branch CI and disposable browser acceptance; fix failures before merging. Keep production collection closed.
+2. Follow [operations](docs/OPERATIONS.md): verify a real backup/restore, inspect existing schema, apply the three new migrations in order, then deploy the matching application to each host and check `/api/health` and signed-in flows.
+3. Configure protected operations secrets, scanner, schedules and failure notifications, then verify they actually run. A workflow file is not an active service.
+4. Obtain verified Oran programme/source rights and independent reviewers. Publish a small reviewed pilot. Agree exact academic dates/prices/refunds, retention/deletion, operator details and legal pages before opening payments.
+5. Complete fresh-account email/recovery acceptance, accessibility, translations, real-device/mobile, load and pilot tests. No PDFs or approved QCMs have been supplied by the owner.
+
+Architecture diagrams and data contracts: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Deployment, scans, backups and remaining operational limits: [docs/OPERATIONS.md](docs/OPERATIONS.md).
+
+Additional commands:
+
+```sh
+node tests/database/architecture.mjs
+node --test tests/operations.test.mjs
+# Docker + Supabase CLI required; synthetic local environment only:
+supabase start
+node scripts/ops/run-integration.mjs
+```
+
+## Historical snapshot — superseded where noted above
+
 **Snapshot:** 2026-10-12, based on repository `main` at `21f0cc3`, the source tree, and prior owner conversations. Recheck Git and deployments on every new session. The latest documented live acceptance is dated **2026-10-06**; this document does not assert that the live services were retested on 2026-10-12.
 
 ## Purpose and current status

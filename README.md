@@ -47,3 +47,7 @@ node tests/database/admin-content.mjs
 The database tests use `@electric-sql/pglite` from dev dependencies. Start the built server and set `TEST_APP_URL` to run `tests/auth-routes.test.mjs`. The current Cloudflare preview is [app.medqcm.workers.dev](https://app.medqcm.workers.dev); [Vercel](https://qcmmed.vercel.app) is a second deployment. Check the deployed revision before interpreting either as current.
 
 For rollout status, accepted limitations and next steps, read [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) and the [launch checklist](docs/LAUNCH_CHECKLIST.md).
+
+## Architecture and operational handover
+
+See [the project handover](PROJECT_HANDOVER.md) for current branch versus live status, [the architecture](docs/ARCHITECTURE.md) for diagrams and data contracts, and [the operations guide](docs/OPERATIONS.md) for isolated tests, ordered migrations, scanning, backup/restore and deployment gates. The new architecture requires migrations through `202610200003`; payments remain closed until acceptance and commercial terms are approved.
