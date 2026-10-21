@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isAdmin, isStaff } from "./policy";
+import { isAdmin, isStaff, canManagePayments } from "./policy";
 
 // Call at every future protected data operation as well as page boundaries.
 export async function requireUser(locale = "fr") {
@@ -20,5 +20,12 @@ export async function requireAdmin(locale = "fr") {
 export async function requireStaff(locale = "fr") {
   const user = await requireUser(locale);
   if (!isStaff(user)) redirect(`/${locale}/dashboard?error=unauthorized`);
+  return user;
+}
+
+export async function requirePaymentManager(locale = "fr") {
+  const user = await requireUser(locale);
+  if (!canManagePayments(user))
+    redirect(`/${locale}/dashboard?error=unauthorized`);
   return user;
 }

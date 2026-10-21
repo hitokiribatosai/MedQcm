@@ -48,6 +48,7 @@ test.beforeAll(async () => {
   for (const [name, role] of Object.entries({
     admin: "admin",
     reviewer: "medical_reviewer",
+    payments: "payment_manager",
     student: "student",
     other: "student",
   })) {
@@ -231,11 +232,13 @@ test("publication, scoped payment and student history work through browser sessi
     await expect(
       student.locator("article").filter({ hasText: "pending" }),
     ).toBeVisible();
-    await editor.goto("/fr/admin/subscriptions");
-    await editor
+    await login(other, "payments");
+    await other.goto("/fr/admin");
+    await expect(other).toHaveURL(/\/fr\/admin\/subscriptions/);
+    await other
       .getByLabel("Note de vérification", { exact: true })
       .fill("Reçu synthétique accepté pour test");
-    await editor
+    await other
       .getByRole("button", { name: "Approuver l’accès", exact: true })
       .click();
     await student.reload();
