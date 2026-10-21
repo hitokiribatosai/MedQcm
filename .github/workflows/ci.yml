@@ -2,8 +2,12 @@ name: Verify MedQCM
 
 on:
   push:
-    branches: [main, codex/architecture-foundation]
+    branches: [main]
   pull_request:
+
+concurrency:
+  group: verify-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
