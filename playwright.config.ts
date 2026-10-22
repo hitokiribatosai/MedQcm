@@ -7,6 +7,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.TEST_APP_URL || "http://127.0.0.1:3100",
     trace: "retain-on-failure",
+    actionTimeout: 15000,
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   reporter: [["list"], ["html", { open: "never" }]],

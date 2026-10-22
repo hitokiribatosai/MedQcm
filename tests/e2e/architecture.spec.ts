@@ -84,7 +84,9 @@ test("publication, scoped payment and student history work through browser sessi
       source: "Automated test fixture programme",
     });
     await editor.goto("/fr/admin/questions");
-    await editor.getByLabel("Module", { exact: true }).selectOption(moduleId);
+    await editor
+      .getByRole("combobox", { name: "Module", exact: true })
+      .selectOption(moduleId);
     await editor
       .getByRole("button", { name: "Nouveau brouillon QCM", exact: true })
       .click();
@@ -209,9 +211,11 @@ test("publication, scoped payment and student history work through browser sessi
       .eq("id", true);
     expect(error).toBeNull();
     await student.goto("/fr/subscribe");
-    await student.getByLabel("Offre", { exact: true }).selectOption(offer.id);
     await student
-      .getByLabel("Année à débloquer", { exact: true })
+      .getByRole("combobox", { name: "Offre", exact: true })
+      .selectOption(offer.id);
+    await student
+      .getByRole("combobox", { name: "Année à débloquer", exact: true })
       .selectOption("1");
     await student
       .getByLabel("Reçu (JPG, PNG, PDF ; 5 Mo)", { exact: true })
@@ -256,9 +260,11 @@ test("publication, scoped payment and student history work through browser sessi
       fullPage: true,
     });
   } finally {
-    await editorContext.close();
-    await reviewerContext.close();
-    await studentContext.close();
-    await otherContext.close();
+    await Promise.allSettled([
+      editorContext.close(),
+      reviewerContext.close(),
+      studentContext.close(),
+      otherContext.close(),
+    ]);
   }
 });
