@@ -72,11 +72,13 @@ test("publication, scoped payment and student history work through browser sessi
     studentContext = await browser.newContext({
       viewport: { width: 390, height: 844 },
     }),
-    otherContext = await browser.newContext();
+    otherContext = await browser.newContext(),
+    paymentContext = await browser.newContext();
   const editor = await editorContext.newPage(),
     reviewer = await reviewerContext.newPage(),
     student = await studentContext.newPage(),
-    other = await otherContext.newPage();
+    other = await otherContext.newPage(),
+    manager = await paymentContext.newPage();
   try {
     await login(editor, "admin");
     await mutation(editor, "curriculum", "verify_release", {
@@ -236,15 +238,18 @@ test("publication, scoped payment and student history work through browser sessi
     await expect(
       student.locator("article").filter({ hasText: "pending" }),
     ).toBeVisible();
-    await login(other, "payments");
-    await other.goto("/fr/admin");
-    await expect(other).toHaveURL(/\/fr\/admin\/subscriptions/);
-    await other
+    await login(manager, "payments");
+    await manager.goto("/fr/admin");
+    await expect(manager).toHaveURL(/\/fr\/admin\/subscriptions/);
+    await manager
       .getByLabel("Note de vérification", { exact: true })
       .fill("Reçu synthétique accepté pour test");
-    await other
+    await manager
       .getByRole("button", { name: "Approuver l’accès", exact: true })
       .click();
+    await expect(
+      manager.getByRole("button", { name: "Approuver l’accès", exact: true }),
+    ).toHaveCount(0);
     await student.reload();
     await expect(
       student
@@ -265,6 +270,7 @@ test("publication, scoped payment and student history work through browser sessi
       reviewerContext.close(),
       studentContext.close(),
       otherContext.close(),
+      paymentContext.close(),
     ]);
   }
 });
