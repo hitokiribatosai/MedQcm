@@ -80,7 +80,7 @@ test("encrypted backup restores Storage bytes, rejects wrong keys and refuses it
     );
     await writeFile(
       join(dir, "psql"),
-      "#!/usr/bin/env node\nprocess.exit(0);",
+      "#!/usr/bin/env node\nconst i=process.argv.indexOf('--dbname');process.exit(i>0 && process.argv[i+1]==='postgresql://test.invalid/target' ? 0 : 1);",
       { mode: 0o700 },
     );
     const archive = join(dir, "backup.enc"),

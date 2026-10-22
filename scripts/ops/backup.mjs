@@ -215,23 +215,21 @@ try {
     for (const o of manifest.objects)
       if ((await hash(join(contents, o.filename))) !== o.sha256)
         throw Error("Object checksum mismatch");
-    await run(
-      "psql",
-      [
-        "--single-transaction",
-        "--variable",
-        "ON_ERROR_STOP=1",
-        "--file",
-        join(contents, "roles.sql"),
-        "--file",
-        join(contents, "schema.sql"),
-        "--command",
-        "SET session_replication_role = replica",
-        "--file",
-        join(contents, "data.sql"),
-      ],
-      { env: { ...process.env, PGDATABASE: dbUrl } },
-    );
+    await run("psql", [
+      "--dbname",
+      dbUrl,
+      "--single-transaction",
+      "--variable",
+      "ON_ERROR_STOP=1",
+      "--file",
+      join(contents, "roles.sql"),
+      "--file",
+      join(contents, "schema.sql"),
+      "--command",
+      "SET session_replication_role = replica",
+      "--file",
+      join(contents, "data.sql"),
+    ]);
     const db = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
