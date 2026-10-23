@@ -1,6 +1,6 @@
 # MedQCM website architecture
 
-Implementation date: 2026-10-21. This architecture is implemented on the architecture feature branch; deployment and hosted operations must be verified separately. MedQCM remains a website. A future mobile client can use the same access rules and database operations after a deliberate mobile-auth/API design.
+Implementation date: 2026-10-21. This architecture was deployed to Supabase, Cloudflare and Vercel on 2026-10-23 after backup/restore and migration rehearsal. Hosted operations still require activation; see PROJECT_HANDOVER.md for verification limits. MedQCM remains a website. A future mobile client can use the same access rules and database operations after a deliberate mobile-auth/API design.
 
 ## System map
 

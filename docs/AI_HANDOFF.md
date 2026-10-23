@@ -1,5 +1,10 @@
 # MedQCM continuation guide
 
+## Deployment update — 2026-10-23
+
+Architecture PR #1 is merged and deployed on Cloudflare and Vercel. The three new SQL migrations are already applied; do not replay them. Verified encrypted backup/local restore, unchanged original attempts, both live health endpoints, five route/access tests per host and signed-in admin views. Read the current [project handover](../PROJECT_HANDOVER.md) for exact revisions, evidence and limits. Hosted scanner/scheduled backups/alerts, full production account/payment acceptance, approved content and commercial/legal decisions remain pending. Payments remain closed. Earlier pre-deployment statements below are historical.
+
+
 ## Architecture branch update — 2026-10-21
 
 The new implementation supersedes the earlier descriptions of browser-only PDF drafts, broad annual/semester access and draft-only QCM editing. It adds versioned publishing, scoped academic-period access, configured exams and private PDF scan/review workflows. Read [PROJECT_HANDOVER.md](../PROJECT_HANDOVER.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [OPERATIONS.md](OPERATIONS.md) for current implementation and rollout order.

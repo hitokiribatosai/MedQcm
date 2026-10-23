@@ -1,8 +1,20 @@
 # MedQCM project handover
 
-## Current architecture implementation — 2026-10-21
+## Production rollout — 2026-10-23
 
-**Read this section before the historical snapshot below.** Development is on `codex/architecture-foundation`, based on `e9585d2`. The new schema and application are not yet verified on production; do not deploy the application before its three migrations. Payments remain closed and no medical content has been approved.
+The new architecture is **deployed**, superseding the pre-deployment notes below. PR #1 was merged into `main` as `47b5252ec6b08568da672e0df044636d2b1315a0`; GitHub's verification check passed. Cloudflare runs application source `308b8fb`, Worker version `9552ff0b-bd7f-4b4e-9136-ccfacfb3123f`. Vercel reported a successful production deployment for merge commit `47b5252`.
+
+- The three `20261020000*` migrations were applied once, in one production transaction, after the encrypted backup and local restore/migration rehearsal passed. **Do not rerun them.** Schema health is `202610200003`; three accounts and five attempts were preserved, including every original attempt field. There are 111 draft curriculum modules, six sample questions and no published questions; payments remain closed.
+- `/api/health` returned HTTP 200 on both hosts. All five live route/auth-access smoke tests passed on each host. Signed-in administrator checks confirmed both admin dashboards; Cloudflare also loaded the new curriculum, offers, question and PDF workspaces and the existing history/statistics. The historical technical-test question is confirmed to remain a private draft; it was not published or deleted.
+- Production checks confirmed private question-version reads, no student self-assignment of access grants and private PDF/receipt buckets. Full fresh signup/email/recovery, new quiz mutations, two-student isolation and receipt transactions were **not repeated on production** during this rollout; isolated integration covered the content/quiz/payment workflows.
+- Vercel's health response still labels its release `development` because `NEXT_PUBLIC_RELEASE_SHA` is not configured there. Its deployed commit was verified through the provider's GitHub status. Cloudflare health identifies `308b8fb`.
+- Hosted scanner, scheduled backups and monitoring/notifications are **not active**. A PDF cannot publish until scanning and independent review pass. The backup is local/encrypted; an independent offsite copy and protected scheduled operations remain launch gates. Content, commercial/legal terms and pilot testing remain pending.
+
+Continue with hosted operations and the remaining acceptance/content gates; the database/application rollout itself is complete. See [architecture](docs/ARCHITECTURE.md), [operations](docs/OPERATIONS.md) and [launch checklist](docs/LAUNCH_CHECKLIST.md).
+
+## Architecture implementation and rehearsal — 2026-10-21/22
+
+**Historical implementation record; the rollout status above supersedes deployment statements here.** Development is on `codex/architecture-foundation`, based on `e9585d2`. The new schema and application are not yet verified on production; do not deploy the application before its three migrations. Payments remain closed and no medical content has been approved.
 
 The owner approved implementing the architecture, including curriculum/content publishing, learning integrity, scoped subscriptions, secure documents and operations. Supabase remains the backend; Cloudflare and Vercel remain the website hosts.
 
