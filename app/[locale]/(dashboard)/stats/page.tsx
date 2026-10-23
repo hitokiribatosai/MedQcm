@@ -36,8 +36,9 @@ export default async function StatisticsPage({
     .range((page - 1) * 20, page * 20 - 1);
   const { data: summary, error: summaryError } =
     await supabase.rpc("training_summary");
-  const { data: progress, error: progressError } =
-    await supabase.rpc("training_module_progress");
+  const { data: progress, error: progressError } = await supabase.rpc(
+    "training_module_progress",
+  );
   const rows = data ?? [],
     questions = Number(summary?.questions ?? 0),
     correct = Number(summary?.correct ?? 0),
@@ -84,7 +85,9 @@ export default async function StatisticsPage({
             </h2>
             {progressError ? (
               <p role="alert" className="card p-5">
-                {en ? "Module progress is temporarily unavailable." : "La progression par module est temporairement indisponible."}
+                {en
+                  ? "Module progress is temporarily unavailable."
+                  : "La progression par module est temporairement indisponible."}
               </p>
             ) : (progress as ModuleProgress[] | null)?.length ? (
               <div className="grid sm:grid-cols-2 gap-4">
@@ -94,15 +97,33 @@ export default async function StatisticsPage({
                   const seen = Number(module.unique_questions_seen);
                   const catalog = Number(module.catalog_questions ?? 0);
                   return (
-                    <article key={module.module_id} className="card p-5 space-y-2">
+                    <article
+                      key={module.module_id}
+                      className="card p-5 space-y-2"
+                    >
                       <h3 className="font-bold">{module.module_name}</h3>
                       <p className="text-sm">
-                        {Number(module.sessions)} {en ? "sessions" : "sessions"} · {presented ? Math.round(correct * 100 / presented) : 0}% {en ? "accuracy" : "réussite"}
+                        {Number(module.sessions)} {en ? "sessions" : "sessions"}{" "}
+                        ·{" "}
+                        {presented
+                          ? Math.round((correct * 100) / presented)
+                          : 0}
+                        % {en ? "accuracy" : "réussite"}
                       </p>
                       <p className="text-sm">
-                        {seen}{catalog ? ` / ${catalog}` : ""} {en ? "distinct questions seen" : "questions distinctes vues"}
+                        {seen}{" "}
+                        {en
+                          ? "distinct questions seen across your history"
+                          : "questions distinctes vues dans votre historique"}{" "}
+                        · {catalog}{" "}
+                        {en
+                          ? "questions currently in the catalog"
+                          : "questions actuellement au catalogue"}
                       </p>
-                      <Link className="underline text-sm" href={`/${locale}/review`}>
+                      <Link
+                        className="underline text-sm"
+                        href={`/${locale}/review`}
+                      >
                         {en ? "Review mistakes" : "Revoir mes erreurs"}
                       </Link>
                     </article>
@@ -111,7 +132,9 @@ export default async function StatisticsPage({
               </div>
             ) : (
               <p className="card p-5">
-                {en ? "Finish a quiz to see progress by module." : "Terminez un QCM pour voir la progression par module."}
+                {en
+                  ? "Finish a quiz to see progress by module."
+                  : "Terminez un QCM pour voir la progression par module."}
               </p>
             )}
           </section>

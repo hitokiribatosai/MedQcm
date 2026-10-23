@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/server";
 import { isCorrect, score } from "@/lib/quiz/engine";
 import type { Attempt } from "@/lib/quiz/types";
-import ReportQuestionButton from '@/components/quiz/ReportQuestionButton';
+import ReportQuestionButton from "@/components/quiz/ReportQuestionButton";
 export default async function ResultsPage({
   params,
   searchParams,
@@ -42,8 +42,22 @@ export default async function ResultsPage({
     );
   const attempt = data as Attempt,
     metrics = score(attempt.questions, attempt.answers);
+  const { data: notices } = await supabase.rpc("attempt_content_notices", {
+    p_id: attempt.id,
+  });
   return (
     <section className="max-w-4xl mx-auto space-y-6">
+      {(notices as { question: string; reason: string }[] | null)?.map(
+        (notice, i) => (
+          <p key={i} role="status" className="card p-4 border-amber-500">
+            {en ? "Content correction notice" : "Avis de correction"}:{" "}
+            {notice.question} — {notice.reason}.{" "}
+            {en
+              ? "Your original result is preserved."
+              : "Votre résultat original est conservé."}
+          </p>
+        ),
+      )}
       <header className="card p-6 space-y-3">
         <h1 className="text-2xl font-bold">{attempt.module_name}</h1>
         <p className="text-3xl font-bold">
@@ -101,7 +115,11 @@ export default async function ResultsPage({
             </div>
           ))}
           <p>{q.explanation}</p>
-          <ReportQuestionButton attemptId={attempt.id} questionId={q.id} en={en} />
+          <ReportQuestionButton
+            attemptId={attempt.id}
+            questionId={q.id}
+            en={en}
+          />
         </article>
       ))}
     </section>
