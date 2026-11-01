@@ -16,6 +16,7 @@ export async function GET() {
           module_name: m.title,
           question_count: m.question_count,
           reviewed: m.reviewed,
+          catalog_mode: m.catalog_mode,
         })),
       );
 }

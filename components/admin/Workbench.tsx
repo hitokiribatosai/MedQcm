@@ -534,8 +534,8 @@ function Questions({
     <>
       <p>
         {en
-          ? "Each publication requires a source, permission, and approval by a different medical reviewer. Published versions cannot be edited."
-          : "Chaque publication exige une source, une autorisation et la validation d’un autre relecteur médical. Les versions publiées ne sont pas modifiables."}
+          ? "Independent review and owner-approved practice publication are separate paths. Owner publication does not attest independent medical review. Published versions cannot be edited."
+          : "La relecture indépendante et la publication de pratique autorisée par le propriétaire sont distinctes. Cette dernière ne certifie pas une relecture indépendante. Les versions publiées ne sont pas modifiables."}
       </p>
       <ModulePicker
         en={en}
@@ -791,6 +791,20 @@ function Questions({
                         : "Rejeter"}
                   </button>
                 ))}
+              {v.status === "draft" && (
+                <button
+                  className="btn-secondary"
+                  onClick={() =>
+                    void run(() =>
+                      command("question", "publish_owner", { id: v.id, note }),
+                    )
+                  }
+                >
+                  {en
+                    ? "Owner-approved practice publication"
+                    : "Publier en pratique sous responsabilité du propriétaire"}
+                </button>
+              )}
               {v.status === "approved" && (
                 <button
                   className="btn-primary"

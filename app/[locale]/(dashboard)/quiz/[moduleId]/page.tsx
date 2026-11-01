@@ -23,6 +23,7 @@ export default function QuizPage() {
     module_name: string;
     question_count: number;
     reviewed: boolean;
+    catalog_mode?: "sample" | "published";
   } | null>(null);
   const available = catalogEntry?.question_count ?? 0;
   const [count, setCount] = useState(() =>
@@ -62,6 +63,7 @@ export default function QuizPage() {
             module_name: string;
             question_count: number;
             reviewed: boolean;
+            catalog_mode?: "sample" | "published";
           }[],
         ) => {
           if (!active) return;
@@ -274,9 +276,13 @@ export default function QuizPage() {
             ? en
               ? "Reviewed questions. Saved drafts resume after refresh."
               : "Questions relues. Les brouillons enregistrés reprennent après actualisation."
-            : en
-              ? "Sample content — medical review pending. Saved drafts resume after refresh. Timed sample sessions are for testing, not official exams."
-              : "Contenu exemple — revue médicale en attente. Les brouillons enregistrés reprennent après actualisation. Les sessions chronométrées exemples servent aux tests, pas aux examens officiels."}
+            : catalogEntry?.catalog_mode === "published"
+              ? en
+                ? "Practice questions published under the owner's responsibility. Independent medical review is not recorded. Report suspected errors from your results."
+                : "QCM de pratique publiés sous la responsabilité du propriétaire. Relecture médicale indépendante non enregistrée. Signalez les erreurs depuis vos résultats."
+              : en
+                ? "Sample content — medical review pending. Saved drafts resume after refresh. Timed sample sessions are for testing, not official exams."
+                : "Contenu exemple — revue médicale en attente. Les brouillons enregistrés reprennent après actualisation. Les sessions chronométrées exemples servent aux tests, pas aux examens officiels."}
         </p>
         <label className="block">
           {en ? "Questions" : "Questions"}

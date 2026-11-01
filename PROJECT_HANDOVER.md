@@ -1,5 +1,51 @@
 # MedQCM project handover
 
+## Owner-approved practice publication — 2026-11-01
+
+The owner explicitly chose publication of doctor-sourced QCMs under owner responsibility, followed by student error reports and corrections, without an independent reviewer account. This supersedes the earlier independent-review-only requirement for practice publication; do not fabricate medical reviewer identities or source licences.
+
+Applied additive migration `202611010001_owner_publication.sql` and published **620** first-year questions in one live transaction: Cytologie 114, Embryologie 248, Biochimie 258. **73 flagged drafts remain private**; none of the problematic corrected-PDF changes was mass-imported. Published payloads were unchanged, all six historical attempts were preserved by fingerprint, and an encrypted pre-change snapshot of affected tables/functions/constraints is stored in ignored `.backups/pre-owner-publication-20261101.enc`. This is a targeted rollback snapshot, not a fresh full database/Storage backup. Do not rerun this migration/publication blindly.
+
+The new `publish_owner` action requires trusted admin role, a substantive owner note, structurally valid content, an active non-archived curriculum and no unresolved extraction flag. It records owner identity/time/note, leaves independent reviewer fields empty, and preserves immutable published versions. Ordinary independent approval still exists. `curriculum_overview.reviewed` and admin reviewed-question counts no longer falsely classify owner-published content as independently reviewed. Independently reviewed exam paths exclude owner-approved practice banks; the curriculum remains provisional. Student results already support answer/explanation/typo reports with free-text proposed corrections; admin review and versioned amendments remain the correction route.
+
+Validation: dedicated owner-publication tests (role denial, truthful metadata, quiz completion/reporting, cross-student isolation, revision, flagged hold, withdrawal/history) and the full architecture database suite passed. TypeScript, lint and OpenNext production build passed. Live dry run passed before commit. Private receipts: `../qcm-extraction-first-year/owner-publication-receipt.json` and `owner-live-verification.json` (only claim live student verification when that receipt exists).
+
+Cloudflare deployed successfully with variables preserved: Worker `221eb024-548f-4c57-be20-f73ba58c3ee9`. GitHub/Vercel synchronization is checked separately below. The latest source adds owner-publication controls and French/English practice-content disclosure. Other years, PDFs, pricing and payment collection were not changed.
+
+## Publication requested — live preflight 2026-11-01
+
+Owner requested first-year QCM publication. Read-only Supabase REST check confirmed all 693 imported versions remain drafts, all 693 lack rights references and reviewer IDs, and 73 retain extraction flags. The three active target modules belong to a draft curriculum release. No item meets the existing independent-review/publication requirements; no publication or bypass was performed. A private queue of 620 unflagged (NOT medically approved) IDs and 73 flagged IDs is saved in `../output/review/first-year-publication-queue.json`; actual snapshot in `../qcm-extraction-first-year/publication-preflight.json`. Need documented source permission, an independent review completed by a real reviewer, and validated curriculum before the normal publication RPC can succeed.
+
+The owner’s corrected review PDF was compared on 2026-10-30: 14 changed answer sets plus one unresolved key, with 19 sheets needing further attention. F051 substitutes Q138 for Q143; F028 contradicts its updated option; F005/F007 still lack figures. Do not mass-import its claimed “validated” content. Detailed private report: `../output/review/Comparaison_73_QCM_2026-10-30.md`. No corrected-PDF edits have been applied to live questions.
+
+## French transcription repairs — 2026-10-29
+
+Applied 92 verified content corrections to the existing first-year PDF draft batch in a live transaction. This includes French césures/ligatures, Cytologie Q45/p49's misplaced sub-stem, and complete reconstruction of Biochimie Q13/p640 (BCE), Q113/p655 (BCD), Q130/p657 (CDE), Q218/p666 (ABDE). All educational text remains French. No source PDF, app code, other year, publication status or reviewer identity was changed.
+
+73 drafts now carry French review notes: 64 remaining two-column items and 9 context/explanation/scientific issues. Three flagged drafts also received typography fixes, so 162 unique versions were updated. Do not apply the larger raw OCR candidate plan: it still misreads symbols/numbers and medical words. The entire bank is not corrected or medically verified. The 693 imported questions remain private drafts, not student content.
+
+The dry run and database validator passed; no administrator edits conflicted. Before-values were saved privately, an audit event recorded, all 162 resulting rows read back, and all six training attempts verified unchanged by count and hash in the transaction. Connectivity timed out intermittently before a successful application; do not blindly rerun the apply script. Fresh-connection verification confirmed 693/693 drafts accessible through the paginated admin workspace and denied to student workspace/direct reads. Both deployments share this database; no application redeploy was needed. Details and receipts: private sibling `../qcm-extraction-first-year/repairs/README.md`, `live-receipt.json`, `before-live-update.json`. Local regression checks cover original snapshot matching, stable option IDs, complete keys, sub-stem placement and decimal preservation. Keep extracted book content out of Git.
+
+## First-year QCM review findings — 2026-10-29
+
+**Do not publish the 693-draft batch as a verified bank.** A follow-up screen of all imported payloads and targeted visual/source checks confirmed extraction defects and errors in source corrections. Four Biochimie keys lost letters: Q13/p640 → BCE, Q113/p655 → BCD, Q130/p657 → CDE, Q218/p666 → ABDE. Q13 also mixes its stem with Q9's choices across columns; changing its key alone is insufficient. All 68 imported items from Biochimie PDF pages 639–669 require a complete column-aware recheck. Other defects include Google Books interface text, misplaced sub-stems and standalone questions that depend on missing context.
+
+Source issues include Biochimie Q299 (p772/773: guanine → uric acid, not the printed urea), an inaccurate Cytologie Q13 explanation about osmosis/channels (p5), outdated/generalised emergency-contraception wording in Embryologie Q859 (p120/132), and inconsistent glycolysis versus complete-oxidation scope in Biochimie Q283 (p93/121). Scientific references and proposed French corrections are recorded in the private sibling file `../qcm-extraction-first-year/review/RAPPORT_REVUE.md`.
+
+The automated screen flagged 79 records (not 79 confirmed errors); seven key discrepancies were inspected, four confirmed and three false positives dismissed. No live drafts were edited or published during the review. The whole bank has NOT received exhaustive visual/medical validation. Continue with traceable reconstruction of affected drafts, preserve current administrator edits, and independently review before publication. Keep all educational content in French as requested by the owner. Earlier claims of structurally checked drafts do not establish transcription accuracy.
+
+
+## First-year PDF draft import — 2026-10-29
+
+The owner supplied three Desktop PDFs and requested first-year QCM extraction only. All 1,076 pages were processed locally. **693 private drafts** were inserted in one live transaction: Cytologie 117, Embryologie 249, Biochimie 327. Batch `first-year-pdfs-2026-10-28` records source hashes/page numbers and an audit event. No questions were published and no PDF files were uploaded. The seven existing question versions and six current attempts were preserved.
+
+All payloads passed database validation; fresh-connection checks confirmed draft-only status, paginated admin access to all 693 and denial of student workspace/direct reads. Four visually checked source/key fixtures and two parser regression checks passed. This is **not** line-by-line or medical verification, nor a complete conversion of every question. There are 204 quarantined paired candidates, 19 excluded exact duplicates, and additional unresolved parsing blocks (not a unique-question count). Missing keys, diagrams, cropped scans and shared options require follow-up. Rights references remain blank and difficulty defaults to medium.
+
+Biochimie uses existing `mod-y1-biochimie-struct`; its compilation contains metabolic topics beyond that module's current display title. Confirm course/module placement before publication. No curriculum or other-year changes were made. Review a small pilot with source permissions and an independent medical reviewer before publishing. Both hosts use the same database; no application redeployment is needed for this draft import. Browser sign-in/student quiz acceptance was not repeated.
+
+Private local extraction outputs and scripts are in the sibling `../qcm-extraction-first-year/` directory, outside this repository. Start with its `EXTRACTION_REPORT.md`, `import-receipt.json` and `verification.json`. Do not commit source PDFs, extracted book content or credentials. The importer refuses to repeat an existing batch. Older claims that no PDFs have been supplied are superseded by this entry.
+
+
 ## Production rollout — 2026-10-23
 
 The new architecture is **deployed**, superseding the pre-deployment notes below. PR #1 was merged into `main` as `47b5252ec6b08568da672e0df044636d2b1315a0`; GitHub's verification check passed. Cloudflare runs application source `308b8fb`, Worker version `9552ff0b-bd7f-4b4e-9136-ccfacfb3123f`. Vercel reported a successful production deployment for merge commit `47b5252`.
