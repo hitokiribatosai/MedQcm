@@ -1,5 +1,13 @@
 # MedQCM project handover
 
+## Second-year first publication batch — 2026-11-03
+
+Published **75 French Immunologie practice QCMs** to existing second-year module `mod-y2-immunologie`, batch `second-year-immuno-2026-11-03`: 59 from PDF pages 1–8 and 16 from pages 222–229. Stems/options and all answer sets were visually reconciled with source pages and OCR errors repaired. Source keys are preserved, including multiple-correct and seven-option questions. Owner-approved practice provenance is recorded; no independent medical reviewer or source licence was invented. No explanatory prose was imported. Students can submit proposed corrections from results.
+
+Full transactional dry run and committed import passed database validation and student-role quiz completion/report checks; test attempts/reports were rolled back. The 700 pre-existing question versions and six historical attempts were unchanged. Targeted encrypted pre-change snapshot saved in ignored `.backups/pre-second-year-*.enc` (not a full DB/Storage backup). No schema migration or application redeployment needed: both hosts share the live database. Private scripts/evidence: `../qcm-extraction-second-year/README.md`, `publication-receipt.json`, `dry-run.json`; a fresh-connection student quiz/report check also passed and is recorded in `owner-live-verification.json`. Never replay the applied publication batch.
+
+**This does not complete the second-year PDFs.** The 1,440-page Immunologie compilation includes an unrelated multi-subject textbook starting at PDF page 242, excluded from the immunology module. Remaining scanned annales, true/false grids, clinical cases and inline-answer sections need reliable extraction/reconciliation; preliminary parser success is not publication approval. One visually checked question has no correct choice in its source and is held because the current engine requires at least one. The 131-page Anatomie pathologique PDF is extracted locally only: year placement is awaiting the owner's answer (folder says year 2; live module is year 3). No Anatomie pathologique content or other-year curriculum was changed. Private README lists page ranges, candidate counts, known hazards and continuation steps. First-year publication remains 620, with its previous 73 drafts private.
+
 ## Owner-approved practice publication — 2026-11-01
 
 The owner explicitly chose publication of doctor-sourced QCMs under owner responsibility, followed by student error reports and corrections, without an independent reviewer account. This supersedes the earlier independent-review-only requirement for practice publication; do not fabricate medical reviewer identities or source licences.
