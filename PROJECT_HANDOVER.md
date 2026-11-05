@@ -1,5 +1,13 @@
 # MedQCM project handover
 
+## Third-year Anatomie pathologique publication — 2026-11-05
+
+Published **150 French QCMs** to existing `mod-y3-anapath`, as the owner confirmed this subject belongs in third year. Batch `third-year-anapath-2026-11-03` retains its preparation date; publication occurred on 2026-11-05. Questions isolées QI 1–150, source PDF pages 68–93: 123 multiple-correct questions, six with four choices, and 98 with source explanations. Native extraction/text structure reviewed, 139 source keys corroborated by OCR and 11 reconciled visually; removed marginal annotations and an appended contents page, repaired selected broken compounds. Original source keys retained under owner-approved practice policy, with no fabricated independent reviewer. This is not an independent medical review or updated clinical-guideline validation.
+
+Transactional dry run and publication passed database validation, student-role quiz completion/reporting, and preservation of all 775 previous question versions and six attempts. Test writes rolled back. Encrypted targeted pre-change snapshot in ignored `.backups/pre-third-year-*.enc` (not a full backup). Private evidence/scripts: `../qcm-extraction-third-year/README.md`, `dry-run.json`, `publication-receipt.json`; fresh-connection student quiz/report verification also passed and is recorded in `owner-live-verification.json`. No app/schema change needed: both website hosts use the shared database. Do not replay the applied batch.
+
+**Only this section is published:** remaining scanned annales, progressive cases and the inline-answer compilation still require extraction/reconciliation. No separate third-year Desktop folder was found. Detailed remaining page ranges and source pitfalls are in the private README. First-year 620 and second-year 75 published QCMs remain unchanged; the 73 earlier first-year drafts remain private. Published imported practice total is now **845** across years 1–3.
+
 ## Second-year first publication batch — 2026-11-03
 
 Published **75 French Immunologie practice QCMs** to existing second-year module `mod-y2-immunologie`, batch `second-year-immuno-2026-11-03`: 59 from PDF pages 1–8 and 16 from pages 222–229. Stems/options and all answer sets were visually reconciled with source pages and OCR errors repaired. Source keys are preserved, including multiple-correct and seven-option questions. Owner-approved practice provenance is recorded; no independent medical reviewer or source licence was invented. No explanatory prose was imported. Students can submit proposed corrections from results.
