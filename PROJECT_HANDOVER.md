@@ -1,5 +1,15 @@
 # MedQCM project handover
 
+## Publication status and duplicate cleanup — 2026-11-07
+
+Owner requested publication and removal of duplicates. Fresh live inspection confirmed all **52 sixth-year questions were already published** and all reconciled import-ready rows from years2–6 were present. No additional source-checked, unpublished rows were found in those batches; unresolved PDF sections and flagged drafts remain held.
+
+Audited 1,084 published questions using normalized stem/option/key matching and near-match candidate review. Withdrew **15 confirmed duplicate copies**, all first-year biochemistry, through the existing admin `manage_question('withdraw')` action. Kept one canonical copy each, preferring cleaner text. Differences were typography, OCR, marginal footer text or reordered choices; identical headings alone were not treated as duplicates. Source pages were rendered for chemistry-symbol discrepancies. No question payload or answer key was edited, and no rows were deleted. Historical attempts still retain their question data. This is a duplicate audit, not medical validation or proof of zero remaining semantic duplicates.
+
+Live dry run, committed cleanup and student quiz completion passed; all 1,164 payloads and six saved attempts were unchanged. Encrypted targeted prechange snapshot in ignored `.backups/pre-dedup-*.enc`, not a full backup. Fresh-connection verification confirmed 15 withdrawals, 15 retained published counterparts and all 52 sixth-year questions still published. Private scripts, plan and receipts: `../qcm-dedup-2026-11-07/`. Do not replay the applied plan. Shared DB change requires no app deployment.
+
+Current published imported total: **1,069** — year1 **605** (Biochimie243, Cytologie114, Embryologie248), year2 221, year3 150, year5 41, year6 52. Earlier dated totals below are historical. All unresolved extraction/review holds remain unchanged.
+
 ## Sixth-year first publication batch — 2026-11-07
 
 Published **52 French practice QCMs** in batch `sixth-year-pdfs-2026-11-07`: Dermatologie 15, ORL 14, Ophtalmologie 11, Santé Publique/Épidémiologie 9, Médecine du Travail 3. Added `mod-y6-med-travail` through the existing role-checked curriculum RPC in the existing release, without moving other modules. Subject placement checked against Oran teaching notices/programmes and the published national sixth-year curriculum. This does not certify a complete 2026/27 curriculum.
