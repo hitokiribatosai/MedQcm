@@ -1,5 +1,13 @@
 # MedQCM project handover
 
+## Fifth-year first publication batch — 2026-11-07
+
+Published **41 French practice QCMs**: Néonatalogie 14, Troubles Psychiatriques Majeurs 14, Grossesse Normale & Pathologique 13. Batch `fifth-year-pdfs-2026-11-06` retains its preparation date. Source questions, choices and printed answer keys reconciled using native extraction, French OCR and rendered pages; repaired transcription artefacts. No explanations imported. Owner-approved practice provenance recorded, without invented independent medical reviewer or licence. This is not independent medical or current-guideline validation.
+
+Four questions held for a contradictory key/explanation or country/date-dependent claims. **The fifth-year folder is not fully imported:** all seven PDFs (1,382 pages) have text/OCR extraction, but remaining sections, CCI, OTR and RHUMATO require reconciliation. OTR has hidden native text outside the visible cropped pages; never publish it merely because the parser finds it. Génital duplicates the earlier-year source and was not imported again. Exact pages, official Oran placement sources, remaining candidates and hazards are recorded privately in `../qcm-extraction-fifth-year/README.md`.
+
+Live dry run, committed publication and fresh-connection student-role quiz completion/report submission passed in all three modules. Test writes rolled back; all **1,071** earlier question versions and **six** attempts preserved. Targeted encrypted snapshot saved in ignored `.backups/pre-fifth-year-*.enc` (not a full backup); private receipts record outcomes. Do not replay this batch. Shared database publication needs no app/schema redeployment. Published imported practice total: **1,032** — year 1 620, year 2 221, year 3 150, year 5 41. No browser UI acceptance performed during this batch.
+
 ## Fourth-folder material classified by Oran programme — 2026-11-06
 
 The owner requested checking the actual study year online and routing questions accordingly, instead of treating the Desktop folder name as authoritative. Official Oran sources confirm second-year cardiovascular/respiratory physiology, urinary and endocrine/genital units; neurophysiology is also second year. Clinical disease subjects require separate classification (e.g. clinical haematology in fourth year). This is subject-placement evidence, not complete curriculum approval or a confirmed 2026/27 timetable. Sources and exact section/page mappings are in private `../qcm-extraction-fourth-year/README.md`.
