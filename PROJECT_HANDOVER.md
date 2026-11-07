@@ -1,5 +1,13 @@
 # MedQCM project handover
 
+## Sixth-year first publication batch — 2026-11-07
+
+Published **52 French practice QCMs** in batch `sixth-year-pdfs-2026-11-07`: Dermatologie 15, ORL 14, Ophtalmologie 11, Santé Publique/Épidémiologie 9, Médecine du Travail 3. Added `mod-y6-med-travail` through the existing role-checked curriculum RPC in the existing release, without moving other modules. Subject placement checked against Oran teaching notices/programmes and the published national sixth-year curriculum. This does not certify a complete 2026/27 curriculum.
+
+Rendered question/option/key reconciliation completed for this batch, with transcription repairs and marginal annotations removed. Original printed answers retained under owner-approved practice policy, without invented independent medical review or licence. No explanatory prose imported; 41 multiple-correct questions and one four-option question. Live transactional dry run, committed import and fresh-connection student quiz start/completion/report tests passed across all five modules; test writes rolled back. All **1,112** earlier versions and **six** attempts preserved. Targeted encrypted snapshot in ignored `.backups/pre-sixth-year-*.enc` (not a full backup). Do not replay the batch. Both hosts share the live database; no app/schema redeployment required. No browser UI acceptance performed in this batch.
+
+**Sixth year is not fully imported.** Five PDFs contain 849 pages. Native extraction and local French OCR cover all 849 pages; private OCR logs/coverage record completion. Remaining progressive cases, diagrams, proposed keys, duplicate questions and 10–12-option ophthalmology questions need reconciliation or an explicitly scoped engine extension. ORL vestibular Q14 has a printed key contradicting its explanation and is held. Foreign occupational-law questions require localisation; the asbestos/FIVA question was not published. Private `../qcm-extraction-sixth-year/README.md`, page index, payload, held list and receipts give source pages and continuation details. Published imported practice total is **1,084**: year1 620, year2 221, year3 150, year5 41, year6 52.
+
 ## Fifth-year first publication batch — 2026-11-07
 
 Published **41 French practice QCMs**: Néonatalogie 14, Troubles Psychiatriques Majeurs 14, Grossesse Normale & Pathologique 13. Batch `fifth-year-pdfs-2026-11-06` retains its preparation date. Source questions, choices and printed answer keys reconciled using native extraction, French OCR and rendered pages; repaired transcription artefacts. No explanations imported. Owner-approved practice provenance recorded, without invented independent medical reviewer or licence. This is not independent medical or current-guideline validation.
